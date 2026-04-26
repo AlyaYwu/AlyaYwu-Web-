@@ -1,0 +1,101 @@
+{
+  "lastUpdated": "2026-04-21",
+  "lastUpdatedSlash": "2026/4/21",
+
+  "identity": {
+    "aliasFull": "抽瘋",
+    "callMe": "你可以叫我 抽瘋",
+    "oneLiner": ["可以語音", "16歲", "社恐", "ISFP-T", "雙子座"],
+    "department": "資工系",
+    "region": "土城",
+    "birthday": "6/1",
+    "bioExtras": [
+      "生理/心理男",
+      "深夜常會發瘋亂講話w",
+      "我不是男娘也不是gay!!"
+    ],
+    "lifestyle": [
+      "平日以編程 / 學習為主",
+      "有時偷玩有時編程（有時候我會說打代碼，因為不用選字w",
+      "自製多個網頁專案，包括本站"
+    ]
+  },
+
+  "skills": {
+    "programming": [
+      { "name": "Python", "level": 30 },
+      { "name": "JavaScript", "level": 10 },
+      { "name": "HTML/CSS", "level": 50 },
+      { "name": "C++", "level": 1 }
+    ],
+    "professional": [
+      { "name": "網路滲透測試", "level": 50 },
+      { "name": "網頁開發", "level": 30 },
+      { "name": "電腦維修/排除", "level": 90 },
+      { "name": "系統管理", "level": 70 }
+    ]
+  },
+
+  "hobbies": [
+    { "title": "程式", "description": "熱愛編程與開發" },
+    { "title": "遊戲", "description": "喜歡各種類型的遊戲" },
+    { "title": "網路安全", "description": "網路滲透研究" },
+    { "title": "惡搞", "description": "使用ARP技術讓別人斷網" }
+  ],
+
+  "games": {
+    "minecraft": {
+      "hours": "1000+ 小時(大概13年了ovo",
+      "modes": "生存 | 科技模組包 | 探索模組包",
+      "platform": "有電腦 / 手機(指MC)"
+    },
+    "identityV": {
+      "rank": "二階(沒在打了,大帳也送人了",
+      "roles": "前鋒 | 擊球 | 雜技 | 牛仔",
+      "note": "不常玩(以前玩很瘋w",
+      "idBig": "51642244",
+      "idSmall": "62058845"
+    },
+    "sky": {
+      "regulars": "巫師與正太",
+      "skills": "拿金人 | 獻祭 | 跑圖 | 掛機",
+      "perk": "跟你說喔,跟我相處久了有機率會爆金幣喔w"
+    },
+    "freefire": {
+      "mood": "上課偶爾玩,大約9點到16點",
+      "team": "可組隊一起玩"
+    }
+  },
+
+  "contact": {
+    "discordId": "alya_ywu",
+    "instagramHandle": "ywu.0601",
+    "instagramUrl": "https://www.instagram.com/ywu.0601/",
+    "facebookHandle": "Alya Ywu",
+    "facebookUrl": "https://www.facebook.com/azurea.xdev/",
+    "youtubeHandle": "@AzureaXD",
+    "youtubeUrl": "https://www.youtube.com/@AzureaXD",
+    "usageOrder": "IG > DC > MSG > FB > Line > WeChat"
+  },
+
+  "sections": {
+    "wishYou": ["主動找我玩 (我盡量主動找你)", "不嫌棄我", "能夠長期一起玩"],
+    "pitfalls": [
+      "已讀不回(你對我這樣我也對你這樣",
+      "不讀不回(喔沒,晚點回也是可以的w"
+    ],
+    "mayAnnoyYou": [
+      "秒回",
+      "詞窮",
+      "已讀亂回",
+      "熟了會有點黏人",
+      "不知道該說啥的時候就會\"好\",\"哦哦~\"",
+      "瘋瘋癲癲的www",
+      "嘴巴有點毒",
+      "有點木頭",
+      "理解能力稍微有點慢",
+      "少量的顏文字",
+      "會不小心踩到你的雷點 "
+    ]
+  }
+}
