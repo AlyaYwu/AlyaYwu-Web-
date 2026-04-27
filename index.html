@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-<script>(function(){var m=new Date().getMonth()+1,t='default';if(m>=3&&m<=5)t='green';else if(m>=6&&m<=8)t='green';else if(m>=9&&m<=11)t='amber';if(t!=='default')document.documentElement.dataset.theme=t;})();</script>
+<script>(function(){var u=new URLSearchParams(location.search).get('theme'),m=new Date().getMonth()+1,t='default';if(u)t=u;else if(m>=3&&m<=8)t='green';else if(m>=9&&m<=11)t='amber';if(t&&t!=='default')document.documentElement.dataset.theme=t;})();</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   :root {
@@ -897,7 +897,6 @@
     if (m >= 9 && m <= 11) return 'amber';
     return 'default';
   }
-  applyTheme(seasonalTheme());
 
   // ====== SEASONAL PARTICLE FX ======
   // Holiday/season specific overlays (snow in Dec, petals in spring, leaves in autumn).
@@ -967,7 +966,33 @@
     layer.appendChild(frag);
     document.body.appendChild(layer);
   }
-  spawnFx(activeFx());
+
+  // ====== AUTO REFRESH (URL override + cross-season retick) ======
+  const urlParams = new URLSearchParams(location.search);
+  function pickTheme() {
+    const o = urlParams.get('theme');
+    return (o && THEME_PALETTES[o]) ? o : seasonalTheme();
+  }
+  function pickFx() {
+    const o = urlParams.get('fx');
+    if (o === 'none') return null;
+    if (o && FX_PROFILES[o]) return o;
+    return activeFx();
+  }
+  let currentTheme = null, currentFx = null;
+  function refreshSeason() {
+    const t = pickTheme();
+    if (t !== currentTheme) { applyTheme(t); currentTheme = t; }
+    const f = pickFx();
+    if (f !== currentFx) {
+      document.querySelectorAll('.fx-layer').forEach(n => n.remove());
+      if (f) spawnFx(f);
+      currentFx = f;
+    }
+  }
+  refreshSeason();
+  setInterval(refreshSeason, 60 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshSeason(); });
 
   // ====== INPUT (mouse + touch + idle drift) ======
   const inputState = { tx: 0.5, ty: 0.5, lastInput: 0 };
