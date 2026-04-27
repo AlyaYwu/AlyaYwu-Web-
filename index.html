@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-<script>try { const t = localStorage.getItem('theme'); if (t && t !== 'default') document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script>(function(){var m=new Date().getMonth()+1,t='default';if(m>=3&&m<=5)t='pink';else if(m>=6&&m<=8)t='green';else if(m>=9&&m<=11)t='amber';if(t!=='default')document.documentElement.dataset.theme=t;})();</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   :root {
@@ -882,11 +882,15 @@
     bgUniforms.uC3.value.set(...p.c3);
     bgUniforms.uC4.value.set(...p.c4);
     bgUniforms.uGrain.value.set(...p.grain);
-    try { localStorage.setItem('theme', t); } catch (e) {}
   }
-  let savedTheme = 'default';
-  try { savedTheme = localStorage.getItem('theme') || 'default'; } catch (e) {}
-  applyTheme(savedTheme);
+  function seasonalTheme() {
+    const m = new Date().getMonth() + 1;
+    if (m >= 3 && m <= 5)  return 'pink';
+    if (m >= 6 && m <= 8)  return 'green';
+    if (m >= 9 && m <= 11) return 'amber';
+    return 'default';
+  }
+  applyTheme(seasonalTheme());
 
   // ====== INPUT (mouse + touch + idle drift) ======
   const inputState = { tx: 0.5, ty: 0.5, lastInput: 0 };
