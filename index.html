@@ -304,9 +304,33 @@
     a, button { cursor: pointer; }
   }
 
+  /* ====== SEASONAL FX (snow / petals / leaves) ====== */
+  .fx-layer {
+    position: fixed; inset: 0; z-index: 5;
+    pointer-events: none; overflow: hidden;
+  }
+  .fx-particle {
+    position: absolute; top: -8vh;
+    left: var(--x, 50%);
+    color: var(--c, rgba(255,255,255,0.85));
+    font-size: var(--s, 14px);
+    line-height: 1;
+    text-shadow: 0 0 6px rgba(255,255,255,0.35);
+    animation: fxFall var(--d, 12s) linear var(--delay, 0s) infinite;
+    will-change: transform, opacity;
+    user-select: none;
+  }
+  @keyframes fxFall {
+    0%   { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
+    8%   { opacity: var(--o, 0.9); }
+    92%  { opacity: var(--o, 0.9); }
+    100% { transform: translate3d(var(--drift, 0px), 115vh, 0) rotate(var(--spin, 360deg)); opacity: 0; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .reveal { transition: none; opacity: 1; transform: none; }
     .bar > i { animation: none; }
+    .fx-layer { display: none; }
   }
 </style>
 </head>
@@ -891,6 +915,76 @@
     return 'default';
   }
   applyTheme(seasonalTheme());
+
+  // ====== SEASONAL PARTICLE FX ======
+  // Holiday/season specific overlays (snow in Dec, petals in spring, leaves in autumn).
+  // Driven by date — extend FX_PROFILES to add more occasions.
+  const FX_PROFILES = {
+    snow: {
+      glyphs: ['❄', '❅', '❆', '✦', '·'],
+      count: 70,
+      sizeRange: [8, 20],
+      durRange: [9, 18],
+      driftRange: [-60, 60],
+      spinRange: [-180, 180],
+      color: 'rgba(255,255,255,0.9)',
+      opacity: [0.55, 1],
+    },
+    petals: {
+      glyphs: ['✿', '❀', '❁', '✾'],
+      count: 40,
+      sizeRange: [10, 18],
+      durRange: [12, 22],
+      driftRange: [-100, 100],
+      spinRange: [-720, 720],
+      color: 'rgba(255,182,210,0.85)',
+      opacity: [0.5, 0.95],
+    },
+    leaves: {
+      glyphs: ['🍁', '🍂', '✦'],
+      count: 35,
+      sizeRange: [12, 22],
+      durRange: [10, 20],
+      driftRange: [-120, 120],
+      spinRange: [-540, 540],
+      color: 'rgba(252,211,77,0.85)',
+      opacity: [0.6, 0.95],
+    },
+  };
+  function activeFx() {
+    const d = new Date();
+    const m = d.getMonth() + 1;
+    if (m === 12) return 'snow';
+    if (m >= 3 && m <= 4) return 'petals';
+    if (m >= 10 && m <= 11) return 'leaves';
+    return null;
+  }
+  function spawnFx(profileName) {
+    const p = FX_PROFILES[profileName];
+    if (!p) return;
+    const layer = document.createElement('div');
+    layer.className = 'fx-layer';
+    layer.setAttribute('aria-hidden', 'true');
+    const rand = (lo, hi) => lo + Math.random() * (hi - lo);
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < p.count; i++) {
+      const el = document.createElement('span');
+      el.className = 'fx-particle';
+      el.textContent = p.glyphs[Math.floor(Math.random() * p.glyphs.length)];
+      el.style.setProperty('--x', rand(0, 100) + 'vw');
+      el.style.setProperty('--s', rand(p.sizeRange[0], p.sizeRange[1]) + 'px');
+      el.style.setProperty('--d', rand(p.durRange[0], p.durRange[1]) + 's');
+      el.style.setProperty('--delay', -rand(0, p.durRange[1]) + 's');
+      el.style.setProperty('--drift', rand(p.driftRange[0], p.driftRange[1]) + 'px');
+      el.style.setProperty('--spin', rand(p.spinRange[0], p.spinRange[1]) + 'deg');
+      el.style.setProperty('--c', p.color);
+      el.style.setProperty('--o', String(rand(p.opacity[0], p.opacity[1])));
+      frag.appendChild(el);
+    }
+    layer.appendChild(frag);
+    document.body.appendChild(layer);
+  }
+  spawnFx(activeFx());
 
   // ====== INPUT (mouse + touch + idle drift) ======
   const inputState = { tx: 0.5, ty: 0.5, lastInput: 0 };
