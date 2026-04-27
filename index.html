@@ -348,144 +348,275 @@
     a, button { cursor: pointer; }
   }
 
-  /* ====== HOLIDAY DECOR — geometric / line-art aesthetic ====== */
-  /* Shared: each holiday gets a distinct SVG motif + mono code badge.
-     No fills, only strokes; matches existing cyber/grid language. */
-  .holiday-svg { position: fixed; pointer-events: none; }
+  /* ====== HOLIDAY DECOR — full-page geometric scenes ====== */
+  /* Each holiday is a layered scene (bg field + signature shape + accents + code). */
+  .holiday-svg  { position: fixed; pointer-events: none; }
   .holiday-code {
-    position: fixed; pointer-events: none;
+    position: fixed; pointer-events: none; z-index: 56;
     font-family: 'JetBrains Mono', monospace;
-    font-size: .68rem; letter-spacing: .25em;
+    font-size: .68rem; letter-spacing: .28em;
     text-transform: uppercase;
-    padding: 5px 10px;
-    background: rgba(0,0,0,.55);
+    padding: 6px 12px;
+    background: rgba(0,0,0,.6);
     backdrop-filter: blur(4px);
   }
 
-  /* --- xmas: nested triangle stack (TR), red star, mono code --- */
-  body.holiday-xmas .hx-tree {
-    top: clamp(60px, 8vw, 80px); right: clamp(20px, 4vw, 36px);
-    width: clamp(70px, 8vw, 100px); z-index: 54;
+  /* ============ xmas: starfield + parallax forest + ornament wreath ============ */
+  body.holiday-xmas .hx-stars {
+    position: fixed; inset: 0; z-index: 52; pointer-events: none;
+    background-image:
+      radial-gradient(1.5px 1.5px at 12% 18%, #fff 50%, transparent 70%),
+      radial-gradient(1px 1px at 28% 8%, #fff 50%, transparent 70%),
+      radial-gradient(2px 2px at 44% 24%, #fff 50%, transparent 70%),
+      radial-gradient(1px 1px at 62% 14%, #fff 50%, transparent 70%),
+      radial-gradient(1.5px 1.5px at 78% 6%, #fff 50%, transparent 70%),
+      radial-gradient(1px 1px at 88% 22%, #fff 50%, transparent 70%),
+      radial-gradient(1px 1px at 6% 34%, #fff 50%, transparent 70%),
+      radial-gradient(1.5px 1.5px at 96% 36%, #fff 50%, transparent 70%);
+    opacity: .35;
+    animation: hxTwinkle 4s ease-in-out infinite alternate;
+  }
+  @keyframes hxTwinkle { from { opacity: .15; } to { opacity: .55; } }
+  body.holiday-xmas .hx-forest {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 200px; z-index: 53;
+    pointer-events: none;
+    display: flex; align-items: flex-end; justify-content: space-around;
+    padding: 0 2vw;
+  }
+  body.holiday-xmas .hx-forest svg {
+    width: clamp(50px, 8vw, 110px);
     color: #22c55e;
-    filter: drop-shadow(0 0 16px rgba(34,197,94,.55));
+    filter: drop-shadow(0 0 12px rgba(34,197,94,.55));
+    transform-origin: bottom center;
   }
-  body.holiday-xmas .hx-code {
-    top: calc(clamp(60px, 8vw, 80px) + clamp(110px, 13vw, 160px)); right: clamp(20px, 4vw, 36px);
-    z-index: 54;
-    color: #ef4444; border: 1px solid rgba(34,197,94,.45);
+  body.holiday-xmas .hx-forest svg:nth-child(1) { transform: scale(.7);  opacity: .6; }
+  body.holiday-xmas .hx-forest svg:nth-child(2) { transform: scale(1.25);                }
+  body.holiday-xmas .hx-forest svg:nth-child(3) { transform: scale(.55); opacity: .5; }
+  body.holiday-xmas .hx-forest svg:nth-child(4) { transform: scale(1.5);                 }
+  body.holiday-xmas .hx-forest svg:nth-child(5) { transform: scale(.85); opacity: .8; }
+  body.holiday-xmas .hx-forest svg:nth-child(6) { transform: scale(.65); opacity: .55; }
+  body.holiday-xmas .hx-wreath {
+    top: clamp(60px, 6vw, 90px); right: clamp(20px, 4vw, 40px);
+    width: clamp(80px, 9vw, 130px); z-index: 54;
+    color: #ef4444;
+    filter: drop-shadow(0 0 18px rgba(34,197,94,.5));
+    animation: hxRotate 30s linear infinite;
   }
+  @keyframes hxRotate { to { transform: rotate(360deg); } }
+  body.holiday-xmas .hx-title {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 52; pointer-events: none; white-space: nowrap;
+    font-family: 'Audiowide', system-ui, sans-serif;
+    font-size: clamp(2.5rem, 11vw, 8rem);
+    color: transparent; -webkit-text-stroke: 1px rgba(34,197,94,.45);
+    letter-spacing: .22em;
+    mix-blend-mode: screen; opacity: .35;
+  }
+  body.holiday-xmas .hx-code { top: clamp(60px, 6vw, 90px); right: calc(clamp(20px, 4vw, 40px) + clamp(95px, 10vw, 145px)); color: #ef4444; border: 1px solid rgba(34,197,94,.5); }
   body.holiday-xmas .glow-text { text-shadow: 0 0 30px rgba(34,197,94,.55), 0 0 90px rgba(239,68,68,.4); }
+  @media (max-width: 640px) { body.holiday-xmas .hx-title { font-size: 2.2rem; opacity: .25; } body.holiday-xmas .hx-forest { height: 130px; } }
 
-  /* --- nye: concentric rings on right, outlined year, bottom-left code --- */
+  /* ============ nye: 3 ring systems (TL, BR, center) + outlined year + sweep ============ */
   body.holiday-nye .ny-rings {
-    top: 50%; right: clamp(-180px, -16vw, -100px); transform: translateY(-50%);
-    width: clamp(280px, 36vw, 460px); height: clamp(280px, 36vw, 460px);
-    z-index: 53;
-    color: rgba(251,191,36,.35);
+    z-index: 52;
+    color: rgba(251,191,36,.32);
     animation: nyRotate 80s linear infinite;
   }
-  @keyframes nyRotate {
-    from { transform: translateY(-50%) rotate(0); }
-    to   { transform: translateY(-50%) rotate(360deg); }
-  }
+  body.holiday-nye .ny-rings.tl { top: -160px; left: -160px;     width: clamp(360px, 44vw, 600px); height: clamp(360px, 44vw, 600px); }
+  body.holiday-nye .ny-rings.br { bottom: -160px; right: -160px; width: clamp(360px, 44vw, 600px); height: clamp(360px, 44vw, 600px); animation-direction: reverse; animation-duration: 95s; }
+  body.holiday-nye .ny-rings.c  { top: 50%; left: 50%; transform: translate(-50%,-50%); width: clamp(220px, 26vw, 360px); height: clamp(220px, 26vw, 360px); opacity: .5; animation-duration: 50s; }
+  @keyframes nyRotate { to { transform: rotate(360deg); } }
+  body.holiday-nye .ny-rings.c { animation-name: nyRotateCenter; }
+  @keyframes nyRotateCenter { from { transform: translate(-50%,-50%) rotate(0); } to { transform: translate(-50%,-50%) rotate(360deg); } }
   body.holiday-nye .ny-year {
     position: fixed; pointer-events: none;
-    top: 50%; right: clamp(20px, 4vw, 60px); transform: translateY(-50%);
+    top: 50%; right: clamp(24px, 4vw, 60px); transform: translateY(-50%);
     z-index: 54;
     font-family: 'Audiowide', system-ui, sans-serif;
-    font-size: clamp(2.2rem, 6vw, 4.6rem);
-    color: transparent;
-    -webkit-text-stroke: 1px #fbbf24;
-    letter-spacing: .18em;
-    filter: drop-shadow(0 0 26px rgba(251,191,36,.65));
+    font-size: clamp(2.6rem, 8vw, 6rem);
+    color: transparent; -webkit-text-stroke: 1.5px #fbbf24;
+    letter-spacing: .15em;
+    filter: drop-shadow(0 0 32px rgba(251,191,36,.65));
     writing-mode: vertical-rl;
+    line-height: .92;
   }
-  body.holiday-nye .ny-code {
-    bottom: clamp(18px, 3vw, 30px); left: clamp(18px, 3vw, 36px);
-    z-index: 54;
-    color: #fbbf24; border: 1px solid rgba(251,191,36,.45);
+  body.holiday-nye .ny-sweep {
+    position: fixed; top: 50%; left: 50%; transform-origin: 0 0;
+    z-index: 53; pointer-events: none;
+    width: 60vmax; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(251,191,36,.5), transparent);
+    animation: nySweep 6s linear infinite;
   }
+  @keyframes nySweep {
+    from { transform: rotate(0); }
+    to   { transform: rotate(360deg); }
+  }
+  body.holiday-nye .ny-code { bottom: clamp(20px, 3vw, 36px); left: clamp(20px, 3vw, 36px); color: #fbbf24; border: 1px solid rgba(251,191,36,.5); }
   body.holiday-nye .glow-text { text-shadow: 0 0 30px rgba(251,191,36,.6), 0 0 90px rgba(253,224,71,.45); }
+  @media (max-width: 640px) { body.holiday-nye .ny-rings.tl, body.holiday-nye .ny-rings.br { width: 280px; height: 280px; } body.holiday-nye .ny-year { font-size: 2.2rem; } }
 
-  /* --- halloween: diagonal slash overlay + warning triangle (TR) + mono code --- */
-  body.holiday-halloween .hl-grid {
+  /* ============ halloween: cross-hatch + pumpkin + roaming warnings + giant eye ============ */
+  body.holiday-halloween .hl-hatch {
     position: fixed; inset: 0; z-index: 53; pointer-events: none;
-    background: repeating-linear-gradient(45deg,
-      transparent 0 26px, rgba(168,85,247,.07) 26px 27px, transparent 27px 60px);
+    background:
+      repeating-linear-gradient(45deg,  transparent 0 24px, rgba(168,85,247,.08) 24px 25px, transparent 25px 60px),
+      repeating-linear-gradient(-45deg, transparent 0 60px, rgba(249,115,22,.05) 60px 61px, transparent 61px 120px);
+  }
+  body.holiday-halloween .hl-pumpkin {
+    bottom: clamp(40px, 5vw, 80px); right: clamp(40px, 6vw, 100px);
+    width: clamp(140px, 18vw, 240px); z-index: 53;
+    color: #fb923c;
+    filter: drop-shadow(0 0 22px rgba(168,85,247,.55));
+    animation: hlPumpkinPulse 4s ease-in-out infinite alternate;
+  }
+  @keyframes hlPumpkinPulse {
+    from { filter: drop-shadow(0 0 12px rgba(168,85,247,.4)); }
+    to   { filter: drop-shadow(0 0 30px rgba(249,115,22,.7)); }
+  }
+  body.holiday-halloween .hl-eye {
+    top: clamp(80px, 9vw, 140px); left: clamp(40px, 5vw, 80px);
+    width: clamp(110px, 14vw, 180px); z-index: 53;
+    color: #a855f7;
+    filter: drop-shadow(0 0 18px rgba(168,85,247,.6));
+    animation: hlEyeBlink 7s steps(20, end) infinite;
+  }
+  @keyframes hlEyeBlink {
+    0%, 92%, 100% { opacity: .8; }
+    93%, 95%      { opacity: 0; transform: scaleY(.05); }
+    94%, 96%      { opacity: .8; transform: scaleY(1); }
   }
   body.holiday-halloween .hl-warn {
-    top: clamp(60px, 8vw, 80px); right: clamp(20px, 4vw, 36px);
-    width: clamp(48px, 5vw, 64px); z-index: 54;
+    width: clamp(34px, 4vw, 52px); z-index: 54;
     color: #fb923c;
-    filter: drop-shadow(0 0 14px rgba(168,85,247,.7));
+    filter: drop-shadow(0 0 12px rgba(168,85,247,.7));
     animation: hlFlicker 5s steps(20, end) infinite;
   }
+  body.holiday-halloween .hl-warn.a { top: 64px;  right: clamp(20px, 4vw, 40px); animation-delay: 0s; }
+  body.holiday-halloween .hl-warn.b { top: 38vh;  right: 6vw;                    animation-delay: 1.7s; transform: scale(.7); }
+  body.holiday-halloween .hl-warn.c { top: 60vh;  left: 4vw;                     animation-delay: 3.2s; transform: scale(.85); }
   @keyframes hlFlicker {
     0%, 90%, 100% { opacity: 1; }
-    91%, 95%      { opacity: .15; }
+    91%, 95%      { opacity: .12; }
     93%, 97%      { opacity: 1; }
   }
-  body.holiday-halloween .hl-code {
-    top: calc(clamp(60px, 8vw, 80px) + clamp(70px, 7vw, 90px)); right: clamp(20px, 4vw, 36px);
-    z-index: 54;
-    color: #a855f7; border: 1px solid rgba(168,85,247,.5);
-  }
+  body.holiday-halloween .hl-code { top: 132px; right: clamp(20px, 4vw, 40px); color: #a855f7; border: 1px solid rgba(168,85,247,.5); }
   body.holiday-halloween #grid-overlay {
     background-image:
       linear-gradient(rgba(168,85,247,.10) 1px, transparent 1px),
       linear-gradient(90deg, rgba(168,85,247,.10) 1px, transparent 1px);
   }
   body.holiday-halloween .glow-text { text-shadow: 0 0 30px rgba(249,115,22,.6), 0 0 90px rgba(168,85,247,.5); }
+  @media (max-width: 640px) { body.holiday-halloween .hl-eye { display: none; } }
 
-  /* --- valentine: geometric heart (two circles + triangle) (TR) + mono code --- */
-  body.holiday-valentine .vl-heart {
-    top: clamp(60px, 8vw, 80px); right: clamp(20px, 4vw, 36px);
-    width: clamp(78px, 9vw, 110px); z-index: 54;
+  /* ============ valentine: haze + giant heart + scattered hearts + crossing arrow ============ */
+  body.holiday-valentine::before {
+    content: ''; position: fixed; inset: 0; z-index: 52; pointer-events: none;
+    background:
+      radial-gradient(ellipse 90% 35% at 50% 0%,   rgba(239,68,68,.18), transparent 70%),
+      radial-gradient(ellipse 90% 35% at 50% 100%, rgba(248,113,113,.18), transparent 70%);
+    animation: vPulse 4.5s ease-in-out infinite;
+  }
+  @keyframes vPulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+  body.holiday-valentine .vl-big {
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: clamp(280px, 50vw, 700px); z-index: 52;
+    color: rgba(248,113,113,.4);
+    filter: drop-shadow(0 0 30px rgba(239,68,68,.4));
+    animation: vlBeat 1.8s cubic-bezier(.4,0,.6,1) infinite;
+    mix-blend-mode: screen; opacity: .55;
+  }
+  @keyframes vlBeat {
+    0%, 100% { transform: translate(-50%,-50%) scale(1); }
+    35%      { transform: translate(-50%,-50%) scale(1.05); }
+    70%      { transform: translate(-50%,-50%) scale(.97); }
+  }
+  body.holiday-valentine .vl-small {
+    width: clamp(50px, 6vw, 90px); z-index: 53;
     color: #f87171;
-    filter: drop-shadow(0 0 14px rgba(248,113,113,.6));
+    filter: drop-shadow(0 0 12px rgba(248,113,113,.6));
     animation: vlBeat 1.6s cubic-bezier(.4,0,.6,1) infinite;
     transform-origin: center;
   }
-  @keyframes vlBeat {
-    0%, 100% { transform: scale(1); }
-    35%      { transform: scale(1.08); }
-    70%      { transform: scale(.96); }
+  body.holiday-valentine .vl-small.a { top: 70px;  left: 24px;  animation-delay: 0s; }
+  body.holiday-valentine .vl-small.b { top: 70px;  right: 24px; animation-delay: .4s; }
+  body.holiday-valentine .vl-small.c { bottom: 24px; left: 24px; animation-delay: .8s; }
+  body.holiday-valentine .vl-small.d { bottom: 24px; right: 24px; animation-delay: 1.2s; }
+  body.holiday-valentine .vl-arrow {
+    position: fixed; top: 0; left: 0; z-index: 52; pointer-events: none;
+    width: 100%; height: 100%;
+    color: rgba(248,113,113,.35);
   }
-  body.holiday-valentine .vl-code {
-    top: calc(clamp(60px, 8vw, 80px) + clamp(95px, 11vw, 130px)); right: clamp(20px, 4vw, 36px);
-    z-index: 54;
-    color: #f87171; border: 1px solid rgba(248,113,113,.5);
-  }
+  body.holiday-valentine .vl-code { bottom: clamp(20px, 3vw, 36px); left: 50%; transform: translateX(-50%); color: #f87171; border: 1px solid rgba(248,113,113,.5); }
   body.holiday-valentine .glow-text { text-shadow: 0 0 30px rgba(239,68,68,.6), 0 0 90px rgba(248,113,113,.5); }
+  @media (max-width: 640px) { body.holiday-valentine .vl-big { opacity: .35; } }
 
-  /* --- lunarny: outlined hex + inner dashed hex (TR), 福 inside, mono code --- */
-  body.holiday-lunarny .ln-hex {
-    top: clamp(60px, 8vw, 80px); right: clamp(20px, 4vw, 36px);
-    width: clamp(96px, 10vw, 130px); z-index: 54;
-    color: #fbbf24;
-    filter: drop-shadow(0 0 18px rgba(220,38,38,.55));
-    animation: lnRotate 60s linear infinite;
+  /* ============ lunarny: edge pillars + giant outlined 福 + hex mandala + floating chars ============ */
+  body.holiday-lunarny .ln-pillar {
+    position: fixed; top: 60px; bottom: 0; width: 24px;
+    z-index: 53; pointer-events: none;
+    background: repeating-linear-gradient(180deg,
+      rgba(220,38,38,.6) 0 20px,
+      rgba(251,191,36,.6) 20px 22px,
+      rgba(220,38,38,.6) 22px 42px);
+    box-shadow: 0 0 24px rgba(220,38,38,.4);
   }
-  @keyframes lnRotate { to { transform: rotate(360deg); } }
-  body.holiday-lunarny .ln-fu {
-    position: fixed; pointer-events: none;
-    top: clamp(60px, 8vw, 80px); right: clamp(20px, 4vw, 36px);
-    width: clamp(96px, 10vw, 130px); height: clamp(96px, 10vw, 130px);
-    display: flex; align-items: center; justify-content: center;
+  body.holiday-lunarny .ln-pillar.left  { left: 0; }
+  body.holiday-lunarny .ln-pillar.right { right: 0; }
+  body.holiday-lunarny .ln-fu-big {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) rotate(180deg);
+    z-index: 52; pointer-events: none;
     font-family: 'Noto Sans TC', serif;
-    color: #fbbf24;
-    font-size: clamp(2.2rem, 3.6vw, 3.2rem);
+    font-size: clamp(8rem, 28vw, 22rem);
     font-weight: 900;
-    text-shadow: 0 0 18px rgba(220,38,38,.7);
-    transform: rotate(180deg);
-    z-index: 55;
+    color: transparent;
+    -webkit-text-stroke: 2px rgba(251,191,36,.45);
+    filter: drop-shadow(0 0 40px rgba(220,38,38,.5));
+    mix-blend-mode: screen; opacity: .55;
   }
-  body.holiday-lunarny .ln-code {
-    top: calc(clamp(60px, 8vw, 80px) + clamp(112px, 12vw, 150px)); right: clamp(20px, 4vw, 36px);
-    z-index: 54;
-    color: #fbbf24; border: 1px solid rgba(251,191,36,.5);
+  body.holiday-lunarny .ln-mandala {
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: clamp(360px, 44vw, 620px); height: clamp(360px, 44vw, 620px);
+    z-index: 52;
+    color: rgba(251,191,36,.35);
+    animation: lnRotate 90s linear infinite;
   }
+  @keyframes lnRotate {
+    from { transform: translate(-50%,-50%) rotate(0); }
+    to   { transform: translate(-50%,-50%) rotate(360deg); }
+  }
+  body.holiday-lunarny .ln-char {
+    position: fixed; pointer-events: none; z-index: 53;
+    font-family: 'Noto Sans TC', serif;
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    font-weight: 900;
+    color: transparent; -webkit-text-stroke: 1.5px #fbbf24;
+    filter: drop-shadow(0 0 16px rgba(220,38,38,.6));
+  }
+  body.holiday-lunarny .ln-char.a { top: 80px;  left: 6vw;  transform: rotate(-8deg); }
+  body.holiday-lunarny .ln-char.b { top: 100px; right: 8vw;  transform: rotate(6deg); }
+  body.holiday-lunarny .ln-char.c { bottom: 80px; left: 8vw;  transform: rotate(8deg); }
+  body.holiday-lunarny .ln-char.d { bottom: 100px; right: 6vw; transform: rotate(-6deg); }
+  body.holiday-lunarny .ln-banner {
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+    z-index: 55; pointer-events: none;
+    padding: 8px 28px;
+    border: 2px solid #fbbf24;
+    background: linear-gradient(135deg, rgba(153,27,27,.85), rgba(220,38,38,.85));
+    color: #fff8e7;
+    font-family: 'Noto Sans TC', serif;
+    font-size: clamp(.95rem, 2vw, 1.2rem);
+    letter-spacing: .35em;
+    font-weight: 900;
+    box-shadow: 0 6px 22px rgba(220,38,38,.55), 0 0 26px rgba(251,191,36,.3);
+  }
+  body.holiday-lunarny .ln-code { bottom: clamp(20px, 3vw, 36px); right: clamp(20px, 3vw, 36px); color: #fbbf24; border: 1px solid rgba(251,191,36,.55); }
   body.holiday-lunarny .glow-text { text-shadow: 0 0 30px rgba(220,38,38,.6), 0 0 90px rgba(251,191,36,.55); }
+  body.holiday-lunarny nav { padding-top: 4rem; }
+  @media (max-width: 640px) {
+    body.holiday-lunarny .ln-pillar { width: 14px; }
+    body.holiday-lunarny .ln-char { font-size: 1.8rem; }
+    body.holiday-lunarny .ln-fu-big { font-size: 7rem; }
+  }
 
   /* ====== SEASONAL FX (snow / petals / leaves) ====== */
   .fx-layer {
@@ -1233,24 +1364,40 @@
     xmas: {
       when: (d) => d.getMonth() === 11 && d.getDate() >= 20 && d.getDate() <= 26,
       theme: 'xmas', fx: 'snow',
-      render: () => `
-        <svg class="holiday-svg hx-tree" viewBox="0 0 100 150" fill="none" stroke="currentColor" stroke-width="1.4">
-          <polygon points="50,8 32,42 68,42"/>
-          <polygon points="50,30 22,80 78,80"/>
-          <polygon points="50,64 12,128 88,128"/>
-          <line x1="50" y1="128" x2="50" y2="142" stroke="#a16207" stroke-width="2"/>
-          <circle cx="50" cy="6" r="3" fill="#ef4444" stroke="none"/>
-        </svg>
-        <div class="holiday-code hx-code">[ XMAS // 12.25 ]</div>
-      `,
+      render: () => {
+        const tree = `
+          <svg viewBox="0 0 100 150" fill="none" stroke="currentColor" stroke-width="1.4">
+            <polygon points="50,8 32,42 68,42"/>
+            <polygon points="50,30 22,80 78,80"/>
+            <polygon points="50,64 12,128 88,128"/>
+            <line x1="50" y1="128" x2="50" y2="142" stroke="#a16207" stroke-width="2"/>
+            <circle cx="50" cy="6" r="3" fill="#ef4444" stroke="none"/>
+          </svg>`;
+        return `
+          <div class="hx-stars"></div>
+          <div class="hx-title">MERRY ★ XMAS</div>
+          <div class="hx-forest">${tree.repeat(6)}</div>
+          <svg class="holiday-svg hx-wreath" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.2">
+            <circle cx="60" cy="60" r="52" stroke="#22c55e" stroke-width="1.4"/>
+            <circle cx="60" cy="60" r="40" stroke-dasharray="3 5" stroke="#22c55e"/>
+            <circle cx="60" cy="8"  r="4" fill="#ef4444" stroke="none"/>
+            <circle cx="60" cy="112" r="4" fill="#ef4444" stroke="none"/>
+            <circle cx="8"  cy="60" r="4" fill="#ef4444" stroke="none"/>
+            <circle cx="112" cy="60" r="4" fill="#ef4444" stroke="none"/>
+            <line x1="20" y1="20" x2="100" y2="100" stroke="#22c55e" stroke-dasharray="2 4"/>
+            <line x1="100" y1="20" x2="20" y2="100" stroke="#22c55e" stroke-dasharray="2 4"/>
+          </svg>
+          <div class="holiday-code hx-code">[ XMAS // 12.25 ]</div>
+        `;
+      },
     },
     nye: {
       when: (d) => (d.getMonth() === 11 && d.getDate() >= 30) || (d.getMonth() === 0 && d.getDate() <= 2),
       theme: 'nye', fx: 'fireworks',
       render: () => {
         const y = (new Date().getMonth() === 11) ? new Date().getFullYear() + 1 : new Date().getFullYear();
-        return `
-          <svg class="holiday-svg ny-rings" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1">
+        const ringSet = (extra) => `
+          <svg class="holiday-svg ny-rings ${extra}" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1">
             <circle cx="100" cy="100" r="96"/>
             <circle cx="100" cy="100" r="76" stroke-dasharray="3 6"/>
             <circle cx="100" cy="100" r="56"/>
@@ -1259,7 +1406,12 @@
             <line x1="100" y1="180" x2="100" y2="196"/>
             <line x1="4"   y1="100" x2="20"  y2="100"/>
             <line x1="180" y1="100" x2="196" y2="100"/>
-          </svg>
+          </svg>`;
+        return `
+          ${ringSet('tl')}
+          ${ringSet('br')}
+          ${ringSet('c')}
+          <div class="ny-sweep"></div>
           <div class="ny-year">${y}</div>
           <div class="holiday-code ny-code">[ NYE / ${y}.01.01 ]</div>
         `;
@@ -1269,8 +1421,31 @@
       when: (d) => d.getMonth() === 9 && d.getDate() >= 28,
       theme: 'halloween', fx: 'spooks',
       render: () => `
-        <div class="hl-grid"></div>
-        <svg class="holiday-svg hl-warn" viewBox="0 0 60 62" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="hl-hatch"></div>
+        <svg class="holiday-svg hl-pumpkin" viewBox="0 0 200 180" fill="none" stroke="currentColor" stroke-width="1.4">
+          <polygon points="100,18 175,55 175,140 100,170 25,140 25,55"/>
+          <polygon points="100,38 155,65 155,130 100,156 45,130 45,65" stroke-dasharray="3 5"/>
+          <line x1="100" y1="18" x2="100" y2="0" stroke="#22c55e" stroke-width="3"/>
+          <polygon points="60,80 80,80 70,98" fill="currentColor"/>
+          <polygon points="120,80 140,80 130,98" fill="currentColor"/>
+          <polyline points="55,120 70,110 85,120 100,108 115,120 130,110 145,120"/>
+        </svg>
+        <svg class="holiday-svg hl-eye" viewBox="0 0 160 100" fill="none" stroke="currentColor" stroke-width="1.4">
+          <ellipse cx="80" cy="50" rx="74" ry="36"/>
+          <circle cx="80" cy="50" r="22"/>
+          <circle cx="80" cy="50" r="9" fill="currentColor"/>
+        </svg>
+        <svg class="holiday-svg hl-warn a" viewBox="0 0 60 62" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="30,5 56,57 4,57"/>
+          <line x1="30" y1="22" x2="30" y2="40"/>
+          <circle cx="30" cy="49" r="2" fill="currentColor" stroke="none"/>
+        </svg>
+        <svg class="holiday-svg hl-warn b" viewBox="0 0 60 62" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="30,5 56,57 4,57"/>
+          <line x1="30" y1="22" x2="30" y2="40"/>
+          <circle cx="30" cy="49" r="2" fill="currentColor" stroke="none"/>
+        </svg>
+        <svg class="holiday-svg hl-warn c" viewBox="0 0 60 62" fill="none" stroke="currentColor" stroke-width="2">
           <polygon points="30,5 56,57 4,57"/>
           <line x1="30" y1="22" x2="30" y2="40"/>
           <circle cx="30" cy="49" r="2" fill="currentColor" stroke="none"/>
@@ -1281,15 +1456,32 @@
     valentine: {
       when: (d) => d.getMonth() === 1 && (d.getDate() === 13 || d.getDate() === 14),
       theme: 'valentine', fx: 'hearts',
-      render: () => `
-        <svg class="holiday-svg vl-heart" viewBox="0 0 100 92" fill="none" stroke="currentColor" stroke-width="1.4">
-          <circle cx="30" cy="30" r="20"/>
-          <circle cx="70" cy="30" r="20"/>
-          <path d="M 11.5 38 L 50 86 L 88.5 38"/>
-          <line x1="50" y1="50" x2="50" y2="62" stroke-dasharray="2 3"/>
-        </svg>
-        <div class="holiday-code vl-code">[ 02.14 → YOU ]</div>
-      `,
+      render: () => {
+        const heart = (cls) => `
+          <svg class="holiday-svg ${cls}" viewBox="0 0 100 92" fill="none" stroke="currentColor" stroke-width="1.4">
+            <circle cx="30" cy="30" r="20"/>
+            <circle cx="70" cy="30" r="20"/>
+            <path d="M 11.5 38 L 50 86 L 88.5 38"/>
+          </svg>`;
+        return `
+          <svg class="holiday-svg vl-big" viewBox="0 0 100 92" fill="none" stroke="currentColor" stroke-width="1.2">
+            <circle cx="30" cy="30" r="20"/>
+            <circle cx="70" cy="30" r="20"/>
+            <path d="M 11.5 38 L 50 86 L 88.5 38"/>
+            <circle cx="50" cy="50" r="34" stroke-dasharray="3 5"/>
+            <circle cx="50" cy="50" r="44" stroke-dasharray="2 6"/>
+          </svg>
+          <svg class="vl-arrow" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width=".25">
+            <line x1="0" y1="100" x2="100" y2="0" stroke-dasharray="1 2"/>
+            <polygon points="100,0 96,4 92,0 96,-2" fill="currentColor"/>
+          </svg>
+          ${heart('vl-small a')}
+          ${heart('vl-small b')}
+          ${heart('vl-small c')}
+          ${heart('vl-small d')}
+          <div class="holiday-code vl-code">[ 02.14 → YOU ]</div>
+        `;
+      },
     },
     lunarny: {
       when: (d) => {
@@ -1304,11 +1496,20 @@
       },
       theme: 'lunarny', fx: 'lanterns',
       render: () => `
-        <svg class="holiday-svg ln-hex" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.4">
-          <polygon points="60,8 110,35 110,85 60,112 10,85 10,35"/>
-          <polygon points="60,28 90,45 90,75 60,92 30,75 30,45" stroke-dasharray="3 5"/>
+        <div class="ln-pillar left"></div>
+        <div class="ln-pillar right"></div>
+        <div class="ln-banner">新春大吉</div>
+        <svg class="holiday-svg ln-mandala" viewBox="0 0 240 240" fill="none" stroke="currentColor" stroke-width="1.2">
+          <polygon points="120,12 220,68 220,172 120,228 20,172 20,68"/>
+          <polygon points="120,40 196,82 196,158 120,200 44,158 44,82" stroke-dasharray="3 5"/>
+          <polygon points="120,68 172,98 172,142 120,172 68,142 68,98"/>
+          <circle cx="120" cy="120" r="40" stroke-dasharray="2 4"/>
         </svg>
-        <div class="ln-fu">福</div>
+        <div class="ln-fu-big">福</div>
+        <div class="ln-char a">春</div>
+        <div class="ln-char b">喜</div>
+        <div class="ln-char c">財</div>
+        <div class="ln-char d">吉</div>
         <div class="holiday-code ln-code">[ 春節 // LUNAR_NY ]</div>
       `,
     },
