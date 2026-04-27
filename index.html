@@ -45,6 +45,61 @@
     --accent-rgb: 252,211,77;
     --accent-soft-rgb: 251,191,36;
   }
+  [data-theme="xmas"] {
+    --bg: #050d07;
+    --fg: #f0fff4;
+    --blue: #16a34a;
+    --blue-bright: #22c55e;
+    --blue-elec: #ef4444;
+    --blue-deep: #14532d;
+    --blue-line: rgba(34,197,94,0.22);
+    --accent-rgb: 239,68,68;
+    --accent-soft-rgb: 34,197,94;
+  }
+  [data-theme="nye"] {
+    --bg: #07060a;
+    --fg: #fef3c7;
+    --blue: #f59e0b;
+    --blue-bright: #fbbf24;
+    --blue-elec: #fde047;
+    --blue-deep: #78350f;
+    --blue-line: rgba(251,191,36,0.22);
+    --accent-rgb: 253,224,71;
+    --accent-soft-rgb: 251,191,36;
+  }
+  [data-theme="halloween"] {
+    --bg: #0c0610;
+    --fg: #ffe4cc;
+    --blue: #f97316;
+    --blue-bright: #fb923c;
+    --blue-elec: #a855f7;
+    --blue-deep: #7c2d12;
+    --blue-line: rgba(168,85,247,0.22);
+    --accent-rgb: 168,85,247;
+    --accent-soft-rgb: 251,146,60;
+  }
+  [data-theme="valentine"] {
+    --bg: #100406;
+    --fg: #ffe4e8;
+    --blue: #ef4444;
+    --blue-bright: #f87171;
+    --blue-elec: #fca5a5;
+    --blue-deep: #7f1d1d;
+    --blue-line: rgba(248,113,113,0.22);
+    --accent-rgb: 252,165,165;
+    --accent-soft-rgb: 248,113,113;
+  }
+  [data-theme="lunarny"] {
+    --bg: #0e0404;
+    --fg: #fff1c2;
+    --blue: #dc2626;
+    --blue-bright: #ef4444;
+    --blue-elec: #fbbf24;
+    --blue-deep: #7f1d1d;
+    --blue-line: rgba(251,191,36,0.22);
+    --accent-rgb: 251,191,36;
+    --accent-soft-rgb: 220,38,38;
+  }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
@@ -293,6 +348,58 @@
     a, button { cursor: pointer; }
   }
 
+  /* ====== HOLIDAY BANNER + CORNER DECOR ====== */
+  .holiday-banner {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 55;
+    display: none; pointer-events: none;
+    text-align: center;
+    padding: .35rem 1rem;
+    font-family: 'Audiowide', system-ui, sans-serif;
+    font-size: clamp(.7rem, 1.6vw, .85rem);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb),0.22), transparent);
+    border-bottom: 1px solid var(--blue-line);
+    color: var(--blue-bright);
+    text-shadow: 0 0 14px var(--blue-elec);
+    animation: bannerSlide .9s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .holiday-banner.show { display: block; }
+  @keyframes bannerSlide {
+    from { transform: translateY(-100%); opacity: 0; }
+    to   { transform: translateY(0);     opacity: 1; }
+  }
+  .holiday-corner {
+    position: fixed; z-index: 54; pointer-events: none;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    text-shadow: 0 0 18px var(--blue-elec);
+    opacity: .9;
+    display: none;
+  }
+  .holiday-corner.show { display: block; }
+  .holiday-corner.tl { top: 1.6rem;  left: 1rem;  transform: rotate(-12deg); }
+  .holiday-corner.tr { top: 1.6rem;  right: 1rem; transform: rotate(12deg); }
+  .holiday-corner.bl { bottom: 1rem; left: 1rem;  transform: rotate(8deg); }
+  .holiday-corner.br { bottom: 1rem; right: 1rem; transform: rotate(-8deg); }
+
+  body.holiday-active nav { padding-top: 1.8rem; }
+  body.holiday-xmas      .glow-text { text-shadow: 0 0 30px rgba(34,197,94,0.55), 0 0 90px rgba(239,68,68,0.4); }
+  body.holiday-nye       .glow-text { text-shadow: 0 0 30px rgba(251,191,36,0.6),  0 0 90px rgba(253,224,71,0.45); }
+  body.holiday-halloween .glow-text { text-shadow: 0 0 30px rgba(249,115,22,0.6),  0 0 90px rgba(168,85,247,0.5); }
+  body.holiday-valentine .glow-text { text-shadow: 0 0 30px rgba(239,68,68,0.6),   0 0 90px rgba(248,113,113,0.5); }
+  body.holiday-lunarny   .glow-text { text-shadow: 0 0 30px rgba(220,38,38,0.6),   0 0 90px rgba(251,191,36,0.55); }
+
+  body.holiday-halloween { filter: hue-rotate(0deg) contrast(1.05); }
+  body.holiday-halloween #grid-overlay {
+    background-image:
+      linear-gradient(rgba(168,85,247,0.10) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168,85,247,0.10) 1px, transparent 1px);
+  }
+  body.holiday-xmas .surface { border-color: rgba(34,197,94,0.4); }
+  body.holiday-nye  .surface { border-color: rgba(251,191,36,0.4); }
+  body.holiday-valentine .surface { border-color: rgba(248,113,113,0.4); }
+  body.holiday-lunarny   .surface { border-color: rgba(251,191,36,0.45); }
+
   /* ====== SEASONAL FX (snow / petals / leaves) ====== */
   .fx-layer {
     position: fixed; inset: 0; z-index: 5;
@@ -339,6 +446,12 @@
 <div class="cursor-outer" aria-hidden="true"></div>
 <div class="cursor-inner" aria-hidden="true"></div>
 <div id="toast" class="toast" role="status" aria-live="polite"><div>已複製</div></div>
+
+<div id="holiday-banner" class="holiday-banner" aria-hidden="true"></div>
+<div id="holiday-corner-tl" class="holiday-corner tl" aria-hidden="true"></div>
+<div id="holiday-corner-tr" class="holiday-corner tr" aria-hidden="true"></div>
+<div id="holiday-corner-bl" class="holiday-corner bl" aria-hidden="true"></div>
+<div id="holiday-corner-br" class="holiday-corner br" aria-hidden="true"></div>
 
 <nav class="fixed top-0 left-0 right-0 z-50 px-5 md:px-10 py-4 md:py-5 flex items-center justify-between gap-4 mix-blend-difference">
   <a href="#top" class="brand text-lg md:text-2xl">Alya Ywu</a>
@@ -880,6 +993,31 @@
       c3: [0.620, 0.380, 0.080], c4: [1.000, 0.760, 0.280],
       grain: [1.0, 0.85, 0.5],
     },
+    xmas: {
+      c1: [0.020, 0.040, 0.020], c2: [0.040, 0.180, 0.080],
+      c3: [0.300, 0.080, 0.080], c4: [0.940, 0.270, 0.270],
+      grain: [1.0, 0.7, 0.7],
+    },
+    nye: {
+      c1: [0.025, 0.020, 0.005], c2: [0.180, 0.120, 0.030],
+      c3: [0.620, 0.480, 0.080], c4: [1.000, 0.860, 0.280],
+      grain: [1.0, 0.95, 0.5],
+    },
+    halloween: {
+      c1: [0.040, 0.020, 0.060], c2: [0.150, 0.060, 0.220],
+      c3: [0.620, 0.260, 0.080], c4: [0.660, 0.330, 0.940],
+      grain: [0.9, 0.6, 1.0],
+    },
+    valentine: {
+      c1: [0.060, 0.020, 0.030], c2: [0.220, 0.080, 0.100],
+      c3: [0.620, 0.180, 0.220], c4: [1.000, 0.420, 0.450],
+      grain: [1.0, 0.7, 0.75],
+    },
+    lunarny: {
+      c1: [0.060, 0.020, 0.020], c2: [0.220, 0.080, 0.060],
+      c3: [0.620, 0.280, 0.120], c4: [1.000, 0.650, 0.220],
+      grain: [1.0, 0.85, 0.5],
+    },
   };
   function applyTheme(name) {
     const t = THEME_PALETTES[name] ? name : 'default';
@@ -932,6 +1070,46 @@
       color: 'rgba(252,211,77,0.85)',
       opacity: [0.6, 0.95],
     },
+    fireworks: {
+      glyphs: ['✦', '✧', '★', '✺', '❋', '✹'],
+      count: 55,
+      sizeRange: [10, 26],
+      durRange: [4, 9],
+      driftRange: [-30, 30],
+      spinRange: [-360, 360],
+      color: 'rgba(253,224,71,0.95)',
+      opacity: [0.6, 1],
+    },
+    bats: {
+      glyphs: ['🦇', '🕸', '👻', '✦'],
+      count: 22,
+      sizeRange: [16, 30],
+      durRange: [10, 18],
+      driftRange: [-220, 220],
+      spinRange: [-90, 90],
+      color: 'rgba(168,85,247,0.95)',
+      opacity: [0.55, 1],
+    },
+    hearts: {
+      glyphs: ['♥', '❤', '♡', '✦'],
+      count: 32,
+      sizeRange: [12, 24],
+      durRange: [10, 18],
+      driftRange: [-80, 80],
+      spinRange: [-180, 180],
+      color: 'rgba(248,113,113,0.95)',
+      opacity: [0.6, 1],
+    },
+    lanterns: {
+      glyphs: ['🏮', '✦', '◆'],
+      count: 22,
+      sizeRange: [16, 30],
+      durRange: [14, 22],
+      driftRange: [-50, 50],
+      spinRange: [-30, 30],
+      color: 'rgba(251,191,36,0.95)',
+      opacity: [0.6, 1],
+    },
   };
   function activeFx() {
     const d = new Date();
@@ -967,19 +1145,96 @@
     document.body.appendChild(layer);
   }
 
+  // ====== HOLIDAYS (date-driven, layered on top of seasons) ======
+  const HOLIDAYS = {
+    xmas: {
+      when: (d) => d.getMonth() === 11 && d.getDate() >= 20 && d.getDate() <= 26,
+      theme: 'xmas', fx: 'snow',
+      banner: '🎄  Merry Christmas  🎁',
+      corners: ['🎄', '🎁', '⛄', '🔔'],
+    },
+    nye: {
+      when: (d) => (d.getMonth() === 11 && d.getDate() >= 30) || (d.getMonth() === 0 && d.getDate() <= 2),
+      theme: 'nye', fx: 'fireworks',
+      banner: '✨  Happy New Year  ✨',
+      corners: ['🎆', '🥂', '🎇', '🎉'],
+    },
+    halloween: {
+      when: (d) => d.getMonth() === 9 && d.getDate() >= 28,
+      theme: 'halloween', fx: 'bats',
+      banner: '🎃  Happy Halloween  👻',
+      corners: ['🎃', '🦇', '🕷', '👻'],
+    },
+    valentine: {
+      when: (d) => d.getMonth() === 1 && (d.getDate() === 13 || d.getDate() === 14),
+      theme: 'valentine', fx: 'hearts',
+      banner: '💌  Happy Valentine\'s Day  💖',
+      corners: ['💖', '💌', '🌹', '💝'],
+    },
+    lunarny: {
+      when: (d) => {
+        const k = d.toISOString().slice(0, 10);
+        return [
+          '2026-02-15','2026-02-16','2026-02-17','2026-02-18','2026-02-19',
+          '2027-02-04','2027-02-05','2027-02-06','2027-02-07','2027-02-08',
+          '2028-01-24','2028-01-25','2028-01-26','2028-01-27','2028-01-28',
+          '2029-02-12','2029-02-13','2029-02-14','2029-02-15','2029-02-16',
+          '2030-02-01','2030-02-02','2030-02-03','2030-02-04','2030-02-05',
+        ].includes(k);
+      },
+      theme: 'lunarny', fx: 'lanterns',
+      banner: '🏮  新年快樂  恭喜發財  🧧',
+      corners: ['🏮', '🧧', '🐉', '🎆'],
+    },
+  };
+  function activeHoliday() {
+    const d = new Date();
+    for (const k in HOLIDAYS) if (HOLIDAYS[k].when(d)) return k;
+    return null;
+  }
+
   // ====== AUTO REFRESH (URL override + cross-season retick) ======
   const urlParams = new URLSearchParams(location.search);
+  function pickHoliday() {
+    const o = urlParams.get('holiday');
+    if (o === 'none') return null;
+    if (o && HOLIDAYS[o]) return o;
+    return activeHoliday();
+  }
   function pickTheme() {
     const o = urlParams.get('theme');
-    return (o && THEME_PALETTES[o]) ? o : seasonalTheme();
+    if (o && THEME_PALETTES[o]) return o;
+    const h = pickHoliday();
+    if (h && HOLIDAYS[h].theme) return HOLIDAYS[h].theme;
+    return seasonalTheme();
   }
   function pickFx() {
     const o = urlParams.get('fx');
     if (o === 'none') return null;
     if (o && FX_PROFILES[o]) return o;
+    const h = pickHoliday();
+    if (h && HOLIDAYS[h].fx) return HOLIDAYS[h].fx;
     return activeFx();
   }
-  let currentTheme = null, currentFx = null;
+  function applyHolidayDecor(name) {
+    const banner = document.getElementById('holiday-banner');
+    const corners = ['tl','tr','bl','br'].map(p => document.getElementById('holiday-corner-' + p));
+    document.body.classList.remove('holiday-active','holiday-xmas','holiday-nye','holiday-halloween','holiday-valentine','holiday-lunarny');
+    if (!name || !HOLIDAYS[name]) {
+      banner.classList.remove('show'); banner.textContent = '';
+      corners.forEach(c => { c.classList.remove('show'); c.textContent = ''; });
+      return;
+    }
+    const h = HOLIDAYS[name];
+    document.body.classList.add('holiday-active', 'holiday-' + name);
+    banner.textContent = h.banner;
+    banner.classList.add('show');
+    corners.forEach((c, i) => {
+      c.textContent = h.corners[i] || h.corners[0];
+      c.classList.add('show');
+    });
+  }
+  let currentTheme = null, currentFx = null, currentHoliday = null;
   function refreshSeason() {
     const t = pickTheme();
     if (t !== currentTheme) { applyTheme(t); currentTheme = t; }
@@ -989,6 +1244,8 @@
       if (f) spawnFx(f);
       currentFx = f;
     }
+    const h = pickHoliday();
+    if (h !== currentHoliday) { applyHolidayDecor(h); currentHoliday = h; }
   }
   refreshSeason();
   setInterval(refreshSeason, 60 * 60 * 1000);
