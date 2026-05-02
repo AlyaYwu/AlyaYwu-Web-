@@ -4209,7 +4209,8 @@
         /* ============================================================
      LOADER VIDEO CONFIG — 調這裡就好
      ============================================================ */
-        const VIDEO_SRC = "loader-intro.mp4"; // 影片路徑
+        const VIDEO_SRC =
+          "https://github.com/FCheatDev/alya-assets/releases/download/v1/loader-intro.mp4"; // hosted on alya-assets public release (Cloudflare Pages 25 MiB per-file limit)
         const START_SEC = 0; // 開始秒數（例如 55 = 從 0:55 開始）
         const END_SEC = 11; // 結束秒數；null = 一路播到影片末尾（例如 80 = 到 1:20 停）
         /* ============================================================ */
@@ -4254,6 +4255,41 @@
         try {
           vid.load();
         } catch (e) {}
+
+        // Set audio state up front so the first play() call carries the
+        // user activation from the preceding click into unmuted playback.
+        if (wantSound) {
+          vid.muted = false;
+          vid.volume = 1;
+        } else {
+          vid.muted = true;
+        }
+
+        // Kick off playback synchronously while user activation is still
+        // valid — calling vid.play() inside the canplay handler runs in a
+        // later task and gets blocked.
+        function tryPlay() {
+          const p = vid.play();
+          if (!p || typeof p.catch !== "function") return;
+          p.catch(() => {
+            // unmuted autoplay rejected — fall back to muted, allow
+            // user to unmute on next gesture
+            if (!wantSound) return finish();
+            vid.muted = true;
+            vid.play().catch(() => finish());
+            const unmute = () => {
+              vid.muted = false;
+              window.removeEventListener("pointerdown", unmute);
+              window.removeEventListener("keydown", unmute);
+              window.removeEventListener("touchstart", unmute);
+            };
+            window.addEventListener("pointerdown", unmute, { once: true });
+            window.addEventListener("keydown", unmute, { once: true });
+            window.addEventListener("touchstart", unmute, { once: true });
+          });
+        }
+        tryPlay();
+
         vid.addEventListener(
           "progress",
           () => {
@@ -4281,27 +4317,9 @@
             if (loader.classList.contains("playing")) return;
             loader.classList.add("playing");
             lf.style.width = "100%";
-            if (!wantSound) {
-              vid.muted = true;
-              vid.play().catch(() => finish());
-              return;
-            }
-            vid.muted = false;
-            vid.volume = 1;
-            vid.play().catch(() => {
-              // browser blocked unmuted autoplay — fall back to muted, then unmute on first user gesture
-              vid.muted = true;
-              vid.play().catch(() => finish());
-              const unmute = () => {
-                vid.muted = false;
-                window.removeEventListener("pointerdown", unmute);
-                window.removeEventListener("keydown", unmute);
-                window.removeEventListener("touchstart", unmute);
-              };
-              window.addEventListener("pointerdown", unmute, { once: true });
-              window.addEventListener("keydown", unmute, { once: true });
-              window.addEventListener("touchstart", unmute, { once: true });
-            });
+            // Re-attempt play in case initial sync attempt was a no-op
+            // (e.g. video element wasn't ready yet)
+            if (vid.paused) tryPlay();
           },
           { signal: sig },
         );
