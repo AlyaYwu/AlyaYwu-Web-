@@ -841,7 +841,9 @@
       #loader.naming video {
         filter: blur(20px) brightness(0.55) saturate(1.1);
         transform: scale(1.06);
-        transition: filter 0.9s ease, transform 0.9s ease;
+        transition:
+          filter 0.9s ease,
+          transform 0.9s ease;
       }
       #loader.naming .nameTag .lg {
         animation:
@@ -4217,7 +4219,7 @@
         const VIDEO_SRC =
           "https://github.com/FCheatDev/alya-assets/releases/download/v1/loader-intro.mp4"; // hosted on alya-assets public release (Cloudflare Pages 25 MiB per-file limit)
         const START_SEC = 0; // 開始秒數（例如 55 = 從 0:55 開始）
-        const END_SEC = 11; // 結束秒數；null = 一路播到影片末尾（例如 80 = 到 1:20 停）
+        const END_SEC = null; // 結束秒數；null = 一路播到影片末尾（例如 80 = 到 1:20 停）
         /* ============================================================ */
 
         opts = opts || {};
@@ -4424,18 +4426,16 @@
 
       // replay loader from prefs panel — saves current toggles first
       // so the on-screen sound state takes effect even without pressing 開始
-      document
-        .getElementById("replay-loader")
-        .addEventListener("click", () => {
-          closePrefs(true);
-          setTimeout(
-            () =>
-              runLoader({
-                sound: !prefs || prefs.loaderSound !== false,
-              }),
-            480,
-          );
-        });
+      document.getElementById("replay-loader").addEventListener("click", () => {
+        closePrefs(true);
+        setTimeout(
+          () =>
+            runLoader({
+              sound: !prefs || prefs.loaderSound !== false,
+            }),
+          480,
+        );
+      });
 
       async function init() {
         // load profile
