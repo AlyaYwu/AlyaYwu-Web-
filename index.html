@@ -2,7 +2,10 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <title>Alya Ywu · 自介</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -1098,6 +1101,108 @@
       .lw-actions button.primary:hover {
         background: #d4d4d4;
         border-color: #d4d4d4;
+      }
+
+      /* mobile adaptation for loader + warn modal — keeps every effect,
+         only adjusts sizing, touch targets, and safe-area insets */
+      @media (max-width: 720px) {
+        /* preload bar — respect safe area */
+        #loader .pre {
+          bottom: max(7vh, calc(54px + env(safe-area-inset-bottom, 0px)));
+          font-size: 9px;
+          letter-spacing: 0.32em;
+        }
+        #loader .pre .bar {
+          width: 160px;
+        }
+        /* skip button — bigger touch target, safe area */
+        #loader .skip {
+          right: max(14px, env(safe-area-inset-right, 14px));
+          bottom: max(14px, calc(14px + env(safe-area-inset-bottom, 0px)));
+          padding: 12px 18px;
+          font-size: 11px;
+          letter-spacing: 0.22em;
+          min-height: 44px;
+        }
+        /* name tag — fit small portrait screens */
+        #loader .nameTag .lg {
+          font-size: clamp(40px, 12vw, 64px);
+          letter-spacing: 0.03em;
+        }
+        #loader .nameTag .sm {
+          font-size: 10px;
+          letter-spacing: 0.32em;
+          margin-top: 12px;
+        }
+        /* warn modal: respect safe area, full-width card */
+        .loader-warn {
+          padding: max(16px, env(safe-area-inset-top, 16px))
+            max(16px, env(safe-area-inset-right, 16px))
+            max(20px, calc(16px + env(safe-area-inset-bottom, 0px)))
+            max(16px, env(safe-area-inset-left, 16px));
+          align-items: flex-end;
+        }
+        .lw-card {
+          width: 100%;
+          padding: 24px 22px 22px;
+          border-radius: 0;
+        }
+        .lw-card h3 {
+          font-size: 20px;
+        }
+        .lw-card p {
+          font-size: 13.5px;
+          line-height: 1.65;
+        }
+        /* sound toggle — slightly bigger for touch */
+        .lw-toggle {
+          padding: 14px 0;
+        }
+        .lw-toggle .lw-tog {
+          width: 46px;
+          height: 26px;
+        }
+        .lw-toggle .lw-tog::after {
+          width: 20px;
+          height: 20px;
+        }
+        .lw-toggle.on .lw-tog::after {
+          transform: translateX(20px);
+        }
+        /* remember checkbox — bigger hit area */
+        .lw-check {
+          padding: 6px 0;
+          margin: 16px 0 20px;
+        }
+        .lw-check .lw-box {
+          width: 18px;
+          height: 18px;
+        }
+        .lw-check input:checked + .lw-box::after {
+          left: 5px;
+          top: 1px;
+          width: 6px;
+          height: 10px;
+        }
+        /* actions — equal width, bigger tap targets */
+        .lw-actions {
+          gap: 10px;
+        }
+        .lw-actions button {
+          flex: 1;
+          padding: 14px 16px;
+          font-size: 11px;
+          min-height: 44px;
+        }
+      }
+      /* short / landscape phones — keep modal centered without bottom-sheet */
+      @media (max-width: 720px) and (orientation: landscape) {
+        .loader-warn {
+          align-items: center;
+        }
+        .lw-card {
+          width: min(440px, 92vw);
+        }
       }
 
       /* prefs panel — first-visit setup */
