@@ -723,6 +723,11 @@
         object-fit: cover;
         display: block;
         background: #000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      #loader.playing video {
+        opacity: 1;
       }
       /* preload progress */
       #loader .pre {
@@ -4265,30 +4270,53 @@
           vid.muted = true;
         }
 
-        // Kick off playback synchronously while user activation is still
-        // valid — calling vid.play() inside the canplay handler runs in a
-        // later task and gets blocked.
-        function tryPlay() {
+        // Two-phase playback: synchronously claim user activation with a
+        // play()/pause() pair, then wait for canplaythrough so the video
+        // has buffered enough to play through without stuttering.
+        let started = false;
+        function realStart() {
+          if (started || done) return;
+          started = true;
+          loader.classList.add("playing");
+          lf.style.width = "100%";
+          try {
+            vid.currentTime = START_SEC || 0;
+          } catch (e) {}
           const p = vid.play();
-          if (!p || typeof p.catch !== "function") return;
-          p.catch(() => {
-            // unmuted autoplay rejected — fall back to muted, allow
-            // user to unmute on next gesture
-            if (!wantSound) return finish();
-            vid.muted = true;
-            vid.play().catch(() => finish());
-            const unmute = () => {
-              vid.muted = false;
-              window.removeEventListener("pointerdown", unmute);
-              window.removeEventListener("keydown", unmute);
-              window.removeEventListener("touchstart", unmute);
-            };
-            window.addEventListener("pointerdown", unmute, { once: true });
-            window.addEventListener("keydown", unmute, { once: true });
-            window.addEventListener("touchstart", unmute, { once: true });
-          });
+          if (p && typeof p.catch === "function") {
+            p.catch(handlePlayError);
+          }
         }
-        tryPlay();
+        function handlePlayError() {
+          if (!wantSound) return finish();
+          vid.muted = true;
+          vid.play().catch(() => finish());
+          const unmute = () => {
+            vid.muted = false;
+            window.removeEventListener("pointerdown", unmute);
+            window.removeEventListener("keydown", unmute);
+            window.removeEventListener("touchstart", unmute);
+          };
+          window.addEventListener("pointerdown", unmute, { once: true });
+          window.addEventListener("keydown", unmute, { once: true });
+          window.addEventListener("touchstart", unmute, { once: true });
+        }
+
+        // Phase 1 — claim activation under user gesture; pause once the
+        // promise resolves so playback waits for buffer.
+        const claim = vid.play();
+        if (claim && typeof claim.then === "function") {
+          claim
+            .then(() => {
+              if (!started && !done) {
+                vid.pause();
+                try {
+                  vid.currentTime = START_SEC || 0;
+                } catch (e) {}
+              }
+            })
+            .catch(handlePlayError);
+        }
 
         vid.addEventListener(
           "progress",
@@ -4311,17 +4339,19 @@
           },
           { signal: sig },
         );
+        // Phase 2 — actual smooth playback once browser thinks we can
+        // run end-to-end without buffering.
+        vid.addEventListener("canplaythrough", realStart, { signal: sig });
+        // Fallback: if canplaythrough never fires (slow link) accept
+        // canplay after a generous delay so the loader doesn't hang.
         vid.addEventListener(
           "canplay",
           () => {
-            if (loader.classList.contains("playing")) return;
-            loader.classList.add("playing");
-            lf.style.width = "100%";
-            // Re-attempt play in case initial sync attempt was a no-op
-            // (e.g. video element wasn't ready yet)
-            if (vid.paused) tryPlay();
+            setTimeout(() => {
+              if (!started && !done) realStart();
+            }, 5000);
           },
-          { signal: sig },
+          { signal: sig, once: true },
         );
         vid.addEventListener(
           "timeupdate",
