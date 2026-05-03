@@ -4168,6 +4168,9 @@
    ============================================================ */
       const prefsModal = document.getElementById("prefs");
       function openPrefs() {
+        // start downloading the loader video while user fiddles, so
+        // the replay button can sync-play with sound smoothly
+        if (typeof preloadLoaderVideo === "function") preloadLoaderVideo();
         // populate toggles
         document.querySelectorAll(".prow").forEach((row) => {
           const k = row.dataset.tog;
@@ -4317,16 +4320,30 @@
       /* ============================================================
    LOADER + INIT
    ============================================================ */
-      function runLoader(opts) {
-        /* ============================================================
-     LOADER VIDEO CONFIG — 調這裡就好
-     ============================================================ */
-        const VIDEO_SRC =
-          "https://github.com/FCheatDev/alya-assets/releases/download/v1/loader-intro.mp4"; // hosted on alya-assets public release (Cloudflare Pages 25 MiB per-file limit)
-        const START_SEC = 0; // 開始秒數（例如 55 = 從 0:55 開始）
-        const END_SEC = null; // 結束秒數；null = 一路播到影片末尾（例如 80 = 到 1:20 停）
-        /* ============================================================ */
+      /* ============================================================
+   LOADER VIDEO CONFIG — 調這裡就好
+   ============================================================ */
+      const LOADER_VIDEO_SRC =
+        "https://github.com/FCheatDev/alya-assets/releases/download/v1/loader-intro.mp4"; // hosted on alya-assets public release
+      const LOADER_START_SEC = 0;
+      const LOADER_END_SEC = null;
+      /* ============================================================ */
 
+      // Begin downloading the video early so by the time the user
+      // clicks 觀看, it's mostly buffered. Lets the synchronous play()
+      // inside the click handler succeed immediately with sound (no
+      // extra tap needed) and play smoothly without rebuffering.
+      function preloadLoaderVideo() {
+        const vid = document.getElementById("lvid");
+        if (vid.src) return;
+        vid.preload = "auto";
+        vid.src = LOADER_VIDEO_SRC;
+        try {
+          vid.load();
+        } catch (e) {}
+      }
+
+      function runLoader(opts) {
         opts = opts || {};
         const wantSound =
           opts.sound !== undefined
@@ -4344,6 +4361,8 @@
         const ac = new AbortController();
         const sig = ac.signal;
         let done = false;
+        let started = false;
+
         function finish() {
           if (done) return;
           done = true;
@@ -4357,47 +4376,24 @@
             cb && cb();
           }, 1100);
         }
-        skip.addEventListener("click", finish, { signal: sig });
-
-        try {
-          vid.pause();
-        } catch (e) {}
-        vid.currentTime = 0;
-        vid.src = VIDEO_SRC;
-        try {
-          vid.load();
-        } catch (e) {}
-
-        // Set audio state up front so the first play() call carries the
-        // user activation from the preceding click into unmuted playback.
-        if (wantSound) {
-          vid.muted = false;
-          vid.volume = 1;
-        } else {
-          vid.muted = true;
-        }
-
-        // Two-phase playback: synchronously claim user activation with a
-        // play()/pause() pair, then wait for canplaythrough so the video
-        // has buffered enough to play through without stuttering.
-        let started = false;
-        function realStart() {
+        function startUI() {
           if (started || done) return;
           started = true;
           loader.classList.add("playing");
           lf.style.width = "100%";
-          try {
-            vid.currentTime = START_SEC || 0;
-          } catch (e) {}
-          const p = vid.play();
-          if (p && typeof p.catch === "function") {
-            p.catch(handlePlayError);
-          }
         }
         function handlePlayError() {
+          // Unmuted autoplay rejected. Fall back to muted, allow user
+          // to unmute on next gesture. Should be rare since we play
+          // synchronously inside the click handler.
           if (!wantSound) return finish();
           vid.muted = true;
-          vid.play().catch(() => finish());
+          const p2 = vid.play();
+          if (p2 && typeof p2.then === "function") {
+            p2.then(startUI).catch(() => finish());
+          } else {
+            startUI();
+          }
           const unmute = () => {
             vid.muted = false;
             window.removeEventListener("pointerdown", unmute);
@@ -4409,21 +4405,43 @@
           window.addEventListener("touchstart", unmute, { once: true });
         }
 
-        // Phase 1 — claim activation under user gesture; pause once the
-        // promise resolves so playback waits for buffer.
-        const claim = vid.play();
-        if (claim && typeof claim.then === "function") {
-          claim
-            .then(() => {
-              if (!started && !done) {
-                vid.pause();
-                try {
-                  vid.currentTime = START_SEC || 0;
-                } catch (e) {}
-              }
-            })
-            .catch(handlePlayError);
+        skip.addEventListener("click", finish, { signal: sig });
+
+        // Make sure src is set (preload may not have run for replay
+        // path; idempotent if already set).
+        if (!vid.src || vid.src.indexOf(LOADER_VIDEO_SRC.split("?")[0]) < 0) {
+          vid.src = LOADER_VIDEO_SRC;
+          try {
+            vid.load();
+          } catch (e) {}
         }
+
+        // Reset position before play. pause/currentTime calls are safe
+        // on a video that's still loading.
+        try {
+          vid.pause();
+          vid.currentTime = LOADER_START_SEC || 0;
+        } catch (e) {}
+
+        // Audio state must be set BEFORE play() so the call carries
+        // the user activation from the click into unmuted playback.
+        vid.muted = !wantSound;
+        if (wantSound) vid.volume = 1;
+
+        // Single synchronous play() in the user gesture chain. The
+        // video is hopefully pre-buffered (preloadLoaderVideo started
+        // when warning modal opened) so playback is smooth. We do NOT
+        // pause + replay — that pattern consumed the activation on iOS
+        // and required an extra tap to get sound back.
+        const p = vid.play();
+        if (p && typeof p.catch === "function") {
+          p.catch(handlePlayError);
+        }
+
+        // UI swap fires from the playing event so the video element
+        // only fades in once frames are actually rendering — masks any
+        // first-frame load flash.
+        vid.addEventListener("playing", startUI, { signal: sig });
 
         vid.addEventListener(
           "progress",
@@ -4442,37 +4460,33 @@
         vid.addEventListener(
           "loadedmetadata",
           () => {
-            if (START_SEC > 0) vid.currentTime = START_SEC;
+            if (LOADER_START_SEC > 0) vid.currentTime = LOADER_START_SEC;
           },
           { signal: sig },
         );
-        // Phase 2 — actual smooth playback once browser thinks we can
-        // run end-to-end without buffering.
-        vid.addEventListener("canplaythrough", realStart, { signal: sig });
-        // Fallback: if canplaythrough never fires (slow link) accept
-        // canplay after a generous delay so the loader doesn't hang.
+        // Belt-and-suspenders: if "playing" never fires within a
+        // reasonable time, treat canplay as good enough.
         vid.addEventListener(
           "canplay",
           () => {
-            setTimeout(() => {
-              if (!started && !done) realStart();
-            }, 5000);
+            if (!started && !vid.paused) startUI();
           },
-          { signal: sig, once: true },
+          { signal: sig },
         );
         vid.addEventListener(
           "timeupdate",
           () => {
-            if (END_SEC != null && vid.currentTime >= END_SEC) finish();
+            if (LOADER_END_SEC != null && vid.currentTime >= LOADER_END_SEC)
+              finish();
           },
           { signal: sig },
         );
         vid.addEventListener("ended", finish, { signal: sig });
         vid.addEventListener("error", finish, { signal: sig });
 
-        // safety bail-out if video never loads
+        // safety bail-out if video never starts
         setTimeout(() => {
-          if (!done && !loader.classList.contains("playing")) finish();
+          if (!done && !started) finish();
         }, 12000);
       }
 
@@ -4521,6 +4535,11 @@
       function startLoaderFlow() {
         const mode = prefs && prefs.loaderMode;
         if (mode === "skip") return;
+        // Pre-load the video so by the time the user picks 觀看, it is
+        // already buffered. This is what lets the synchronous play()
+        // inside the click handler succeed with sound on iOS without a
+        // second tap.
+        preloadLoaderVideo();
         if (mode === "play") {
           return runLoader({ sound: prefs.loaderSound !== false });
         }
@@ -4530,16 +4549,14 @@
       }
 
       // replay loader from prefs panel — saves current toggles first
-      // so the on-screen sound state takes effect even without pressing 開始
+      // so the on-screen sound state takes effect even without pressing 開始.
+      // runLoader runs synchronously from the click so vid.play() preserves
+      // the user gesture (needed for unmuted iOS playback without a second tap).
       document.getElementById("replay-loader").addEventListener("click", () => {
         closePrefs(true);
-        setTimeout(
-          () =>
-            runLoader({
-              sound: !prefs || prefs.loaderSound !== false,
-            }),
-          480,
-        );
+        runLoader({
+          sound: !prefs || prefs.loaderSound !== false,
+        });
       });
 
       async function init() {
