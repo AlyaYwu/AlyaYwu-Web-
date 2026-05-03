@@ -4416,12 +4416,14 @@
           } catch (e) {}
         }
 
-        // Reset position before play. pause/currentTime calls are safe
-        // on a video that's still loading.
-        try {
-          vid.pause();
-          vid.currentTime = LOADER_START_SEC || 0;
-        } catch (e) {}
+        // Only reset position when replaying a video that already
+        // ran — first-play is at 0 already and a fresh seek can break
+        // the user-activation chain on some browsers.
+        if (vid.ended || vid.currentTime > 0.5) {
+          try {
+            vid.currentTime = LOADER_START_SEC || 0;
+          } catch (e) {}
+        }
 
         // Audio state must be set BEFORE play() so the call carries
         // the user activation from the click into unmuted playback.
@@ -4430,9 +4432,9 @@
 
         // Single synchronous play() in the user gesture chain. The
         // video is hopefully pre-buffered (preloadLoaderVideo started
-        // when warning modal opened) so playback is smooth. We do NOT
-        // pause + replay — that pattern consumed the activation on iOS
-        // and required an extra tap to get sound back.
+        // when warning modal opened) so playback is smooth. No pause +
+        // replay dance — that consumed the activation on iOS and forced
+        // an extra tap to get sound back.
         const p = vid.play();
         if (p && typeof p.catch === "function") {
           p.catch(handlePlayError);
@@ -4534,15 +4536,12 @@
 
       function startLoaderFlow() {
         const mode = prefs && prefs.loaderMode;
+        // Only "skip" can be silently honoured — auto-playing with sound
+        // is impossible without a fresh user gesture, so even if the user
+        // previously remembered "play" we still need to surface the modal
+        // (the 觀看 click is what unlocks unmuted playback).
         if (mode === "skip") return;
-        // Pre-load the video so by the time the user picks 觀看, it is
-        // already buffered. This is what lets the synchronous play()
-        // inside the click handler succeed with sound on iOS without a
-        // second tap.
         preloadLoaderVideo();
-        if (mode === "play") {
-          return runLoader({ sound: prefs.loaderSound !== false });
-        }
         showLoaderWarn((choice, sound) => {
           if (choice === "play") runLoader({ sound });
         });
