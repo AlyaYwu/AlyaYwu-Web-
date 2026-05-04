@@ -1097,10 +1097,27 @@
         background: #fafafa;
         border-color: #fafafa;
         color: #000;
+        min-width: 120px;
       }
       .lw-actions button.primary:hover {
         background: #d4d4d4;
         border-color: #d4d4d4;
+      }
+      .lw-actions button:disabled,
+      .lw-actions button[disabled] {
+        cursor: progress;
+        opacity: 1;
+      }
+      .lw-actions button.primary:disabled,
+      .lw-actions button.primary[disabled] {
+        background: #404040;
+        border-color: #404040;
+        color: #a3a3a3;
+      }
+      .lw-actions button.primary:disabled:hover,
+      .lw-actions button.primary[disabled]:hover {
+        background: #404040;
+        border-color: #404040;
       }
 
       /* mobile adaptation for loader + warn modal — keeps every effect,
@@ -4502,15 +4519,70 @@
         const remember = document.getElementById("lw-remember");
         const skipBtn = document.getElementById("lw-skip");
         const playBtn = document.getElementById("lw-play");
+        const vid = document.getElementById("lvid");
         remember.checked = false;
         // initialise sound toggle from current pref (default ON)
         const soundOn = !prefs || prefs.loaderSound !== false;
         lwSoundRow.classList.toggle("on", soundOn);
+
+        // Gate the 觀看 button until the video is fully buffered.
+        // This way the click → sync vid.play() chain hits a video that
+        // is ready to play through immediately — no first-frame stutter.
+        const PLAY_LABEL = "▶ 觀看";
+        const ctrl = new AbortController();
+        let ready = false;
+        function setReady() {
+          if (ready) return;
+          ready = true;
+          playBtn.disabled = false;
+          playBtn.textContent = PLAY_LABEL;
+        }
+        function updateProgress() {
+          if (ready) return;
+          try {
+            if (vid.buffered && vid.buffered.length) {
+              const end = vid.buffered.end(vid.buffered.length - 1);
+              const dur = vid.duration || 0;
+              if (dur > 0) {
+                const pct = (end / dur) * 100;
+                if (pct >= 99) {
+                  setReady();
+                  return;
+                }
+                playBtn.textContent = `載入中 ${Math.min(99, Math.round(pct))}%`;
+              }
+            }
+          } catch (e) {}
+        }
+        if (vid.readyState >= 4) {
+          // already buffered (e.g. user is replaying or returned quickly)
+          playBtn.disabled = false;
+          playBtn.textContent = PLAY_LABEL;
+          ready = true;
+        } else {
+          playBtn.disabled = true;
+          playBtn.textContent = "載入中…";
+          vid.addEventListener("canplaythrough", setReady, {
+            signal: ctrl.signal,
+          });
+          vid.addEventListener("progress", updateProgress, {
+            signal: ctrl.signal,
+          });
+          // Fallback: if canplaythrough never fires, accept canplay
+          // after 8 seconds rather than block the user forever.
+          vid.addEventListener(
+            "canplay",
+            () => setTimeout(setReady, 8000),
+            { signal: ctrl.signal, once: true },
+          );
+        }
+
         warn.classList.remove("hidden");
         requestAnimationFrame(() =>
           requestAnimationFrame(() => warn.classList.add("in")),
         );
         function close(choice) {
+          ctrl.abort();
           const sound = lwSoundRow.classList.contains("on");
           if (remember.checked) {
             prefs = prefs || {};
@@ -4528,6 +4600,7 @@
           close("skip");
         }
         function onPlay() {
+          if (!ready) return; // safety; button should be disabled anyway
           close("play");
         }
         skipBtn.addEventListener("click", onSkip);
