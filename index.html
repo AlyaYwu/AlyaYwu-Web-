@@ -982,6 +982,16 @@
         color: #fafafa;
         font-weight: 600;
       }
+      .lw-tip {
+        display: none;
+        font-size: 12.5px !important;
+        line-height: 1.55 !important;
+        color: #a3a3a3 !important;
+        margin: -8px 0 18px !important;
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.04);
+        border-left: 2px solid rgba(96, 165, 250, 0.5);
+      }
       .lw-toggle {
         display: flex;
         align-items: center;
@@ -1170,6 +1180,9 @@
         .lw-card p {
           font-size: 13.5px;
           line-height: 1.65;
+        }
+        .lw-tip {
+          display: block;
         }
         /* sound toggle — slightly bigger for touch */
         .lw-toggle {
@@ -2737,6 +2750,7 @@
           本次開場包含 <b>強烈閃爍光效</b>、<b>故障/抖動殘影</b> 與
           <b>聲音</b>,可能對光敏感族群造成不適。
         </p>
+        <p class="lw-tip">使用電腦觀看,顯示效果會更好喔</p>
         <div class="lw-toggle on" id="lw-sound-row">
           <span class="lbl">播放聲音</span>
           <span class="lw-tog"></span>
