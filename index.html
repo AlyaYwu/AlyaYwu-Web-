@@ -2926,7 +2926,7 @@
           <div class="cards reveal">
             <article class="card">
               <div class="tag">01 · MC</div>
-              <h3>Minecraft</h3>
+              <h3 style="font-family: Caveat">Minecraft</h3>
               <dl>
                 <dt>時數</dt>
                 <dd data-bind="games.minecraft.hours">—</dd>
@@ -3031,58 +3031,6 @@
     <!-- /stage -->
 
     <script>
-      /* ============================================================
-   DATA
-   ============================================================ */
-      const FALLBACK = {
-        identity: {
-          aliasFull: "抽瘋",
-          callMe: "你可以叫我 抽瘋",
-          region: "台灣",
-          birthday: "—",
-          department: "—",
-        },
-        oneLiner: ["夜貓", "ENFP", "貓派", "音樂控"],
-        bioExtras: ["喜歡聽歌、畫圖", "偶爾打遊戲到天亮", "對節慶特別有儀式感"],
-        lifestyle: ["凌晨最有靈感", "咖啡比奶茶多", "週末通常在補眠"],
-        hobbies: [
-          { title: "聽歌", description: "從 J-pop 到 Lo-fi 都聽" },
-          { title: "畫圖", description: "iPad 隨手塗鴉" },
-          { title: "看劇", description: "懸疑、日劇優先" },
-          { title: "拍照", description: "底片濾鏡控" },
-        ],
-        games: {
-          minecraft: {
-            hours: "2000+ 小時",
-            modes: "生存 / 創造 / 模組",
-            platform: "Java + Bedrock",
-          },
-          identityV: { rank: "六階", roles: "佣兵 / 機械師" },
-          sky: {
-            regulars: "暮土 / 雨林",
-            skills: "雙人音樂",
-            perk: "會一點輕功",
-          },
-          freefire: { mood: "深夜放鬆局", team: "看心情" },
-        },
-        sections: {
-          wishYou: ["有耐心", "聊得來", "尊重邊界"],
-          pitfalls: ["不要催進度", "不愛被打斷", "拒絕情勒"],
-          mayAnnoyYou: ["回訊息很慢", "偶爾消失幾天", "沉迷遊戲時不理人"],
-        },
-        contact: {
-          instagramHandle: "alyaywu",
-          instagramUrl: "https://instagram.com/alyaywu",
-          discordId: "alyaywu",
-          youtubeHandle: "@alyaywu",
-          youtubeUrl: "https://youtube.com/@alyaywu",
-          facebookHandle: "Alya Ywu",
-          facebookUrl: "https://facebook.com/alyaywu",
-          usageOrder: "IG > DC > YT > FB",
-        },
-        lastUpdatedSlash: "2026/04/27",
-      };
-
       /* ============================================================
    HOLIDAYS — config
    ============================================================ */
@@ -4584,11 +4532,10 @@
           });
           // Fallback: if canplaythrough never fires, accept canplay
           // after 8 seconds rather than block the user forever.
-          vid.addEventListener(
-            "canplay",
-            () => setTimeout(setReady, 8000),
-            { signal: ctrl.signal, once: true },
-          );
+          vid.addEventListener("canplay", () => setTimeout(setReady, 8000), {
+            signal: ctrl.signal,
+            once: true,
+          });
         }
 
         warn.classList.remove("hidden");
@@ -4646,12 +4593,8 @@
       });
 
       async function init() {
-        // load profile
-        let profile = FALLBACK;
-        try {
-          const r = await fetch("shared/profile.json", { cache: "no-cache" });
-          if (r.ok) profile = await r.json();
-        } catch {}
+        const r = await fetch("shared/profile.json", { cache: "no-cache" });
+        const profile = await r.json();
         fill(profile);
         bindReveal();
         // first time -> show prefs
