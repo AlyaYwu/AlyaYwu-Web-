@@ -3064,20 +3064,20 @@
           label: "春節",
           short: "LNY",
           body: "h-lunar",
-          when: { m: 2, d: 17 },
-        } /* 2026 */,
+          lunar: true, // date resolved per-year via LUNAR table below
+        },
         midautumn: {
           label: "中秋",
           short: "MID",
           body: "h-midautumn",
-          when: { m: 9, d: 25 },
-        } /* 2026 */,
+          lunar: true,
+        },
         dragonboat: {
           label: "端午",
           short: "DRB",
           body: "h-dragonboat",
-          when: { m: 6, d: 19 },
-        } /* 2026 */,
+          lunar: true,
+        },
         birthday: {
           label: "生日",
           short: "BDY",
@@ -3085,6 +3085,70 @@
           when: { m: 6, d: 1 },
         } /* Alya 6/1 */,
       };
+
+      /* ------------------------------------------------------------
+   LUNAR — 農曆節日國曆對照
+   春節/端午/中秋是農曆節日，國曆日期逐年變動。下表為人工核對過的
+   國曆日期 (2026–2035)，來源：台灣行政院人事總處行事曆 + 權威曆書。
+   注意：不要用瀏覽器的 Intl 農曆 (ca-chinese) 直接生成這張表 —
+   它的天文近似在「朔」接近午夜時會差一天 (例如 2027/2030 春節)。
+   表用完 (>2035) 才退回 Intl 近似，並在 console 提示需要續表。
+   lm/ld = 該節日固定的農曆月/日。g[year] = [國曆月, 國曆日]。
+   ------------------------------------------------------------ */
+      const LUNAR = {
+        lunar: {
+          lm: 1, ld: 1,
+          g: { 2026:[2,17], 2027:[2,6], 2028:[1,26], 2029:[2,13], 2030:[2,3], 2031:[1,23], 2032:[2,11], 2033:[1,31], 2034:[2,19], 2035:[2,8] },
+        },
+        dragonboat: {
+          lm: 5, ld: 5,
+          g: { 2026:[6,19], 2027:[6,9], 2028:[5,28], 2029:[6,16], 2030:[6,5], 2031:[6,24], 2032:[6,12], 2033:[6,1], 2034:[6,20], 2035:[6,10] },
+        },
+        midautumn: {
+          lm: 8, ld: 15,
+          g: { 2026:[9,25], 2027:[9,15], 2028:[10,3], 2029:[9,22], 2030:[9,12], 2031:[10,1], 2032:[9,19], 2033:[9,8], 2034:[9,27], 2035:[9,16] },
+        },
+      };
+
+      let _lunarWarned = false;
+      // Gregorian {m,d} of a lunar festival in a given year.
+      function lunarGreg(key, year) {
+        const L = LUNAR[key];
+        const hit = L && L.g[year];
+        if (hit) return { m: hit[0], d: hit[1] };
+        // Past the verified table — approximate via the browser's Chinese
+        // calendar (may be ±1 day; extend LUNAR[].g for exact dates).
+        if (!_lunarWarned) {
+          console.warn(
+            `[countdown] LUNAR table covers 2026–2035; ${year} falls back to an approximate ICU date. Extend LUNAR[].g.`,
+          );
+          _lunarWarned = true;
+        }
+        try {
+          const fmt = new Intl.DateTimeFormat("en-u-ca-chinese", {
+            month: "numeric",
+            day: "numeric",
+          });
+          for (
+            let t = new Date(year, 0, 1);
+            t.getFullYear() <= year;
+            t.setDate(t.getDate() + 1)
+          ) {
+            const p = Object.fromEntries(
+              fmt.formatToParts(t).map((x) => [x.type, x.value]),
+            );
+            if (+p.month === L.lm && +p.day === L.ld)
+              return { m: t.getMonth() + 1, d: t.getDate() };
+          }
+        } catch {}
+        return null;
+      }
+
+      // The {m,d} a holiday falls on in `year` (null = no date / unresolvable).
+      function whenFor(key, year) {
+        if (LUNAR[key]) return lunarGreg(key, year);
+        return HOLIDAYS[key].when || null; // solar: fixed; default: null
+      }
 
       /* ============================================================
    PREFS
@@ -3145,14 +3209,13 @@
           bestKey = null,
           bestAbs = Infinity;
         for (const [k, h] of Object.entries(HOLIDAYS)) {
-          if (!h.when) continue;
+          if (!h.when && !h.lunar) continue;
           // try this year and last year (handle Jan dates near Dec)
           for (const yOff of [0, -1, 1]) {
-            const d = new Date(
-              now.getFullYear() + yOff,
-              h.when.m - 1,
-              h.when.d,
-            );
+            const yr = now.getFullYear() + yOff;
+            const w = whenFor(k, yr);
+            if (!w) continue;
+            const d = new Date(yr, w.m - 1, w.d);
             const diffDays = (d - now) / (1000 * 60 * 60 * 24);
             // window: 10 days before to 10 days after
             if (diffDays >= -10 && diffDays <= 10) {
@@ -3179,11 +3242,17 @@
           bestDays = Infinity,
           bestKey = null;
         for (const [k, h] of Object.entries(HOLIDAYS)) {
-          if (!h.when) continue;
+          if (!h.when && !h.lunar) continue;
           if (k === currentHoliday) continue;
-          let d = new Date(now.getFullYear(), h.when.m - 1, h.when.d);
-          if (d < now)
-            d = new Date(now.getFullYear() + 1, h.when.m - 1, h.when.d);
+          const y = now.getFullYear();
+          let w = whenFor(k, y); // lunar dates differ per year, so resolve both
+          if (!w) continue;
+          let d = new Date(y, w.m - 1, w.d);
+          if (d < now) {
+            w = whenFor(k, y + 1);
+            if (!w) continue;
+            d = new Date(y + 1, w.m - 1, w.d);
+          }
           const days = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
           if (days < bestDays) {
             bestDays = days;
