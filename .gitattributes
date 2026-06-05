@@ -1,0 +1,26 @@
+# Normalize line endings: store everything as LF in the repo.
+# Overrides each machine's core.autocrlf, so checkouts stay consistent.
+* text=auto eol=lf
+
+# Explicit text files (defensive — keeps LF even if auto-detection misfires)
+*.html  text eol=lf
+*.json  text eol=lf
+*.js    text eol=lf
+*.css   text eol=lf
+*.md    text eol=lf
+*.svg   text eol=lf
+
+# Binary assets — never touch their bytes
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.mp4   binary
+*.webm  binary
+*.mp3   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
