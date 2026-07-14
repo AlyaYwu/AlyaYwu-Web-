@@ -992,6 +992,41 @@
         background: rgba(255, 255, 255, 0.04);
         border-left: 2px solid rgba(96, 165, 250, 0.5);
       }
+      .lw-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: min(440px, 92vw);
+      }
+      .lw-progress-bar {
+        margin: 18px -26px -24px;
+        width: calc(100% + 52px);
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+      }
+      .lw-progress-bar.hidden {
+        display: none;
+      }
+      .lw-progress-bar i {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        box-shadow: 0 0 10px rgba(96, 165, 250, 0.7);
+        transition: width 0.2s linear;
+      }
+      .lw-progress-pct {
+        margin-top: 14px;
+        text-align: center;
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        color: #60a5fa;
+      }
+      .lw-progress-pct.hidden {
+        display: none;
+      }
       .lw-toggle {
         display: flex;
         align-items: center;
@@ -1169,6 +1204,9 @@
             max(16px, env(safe-area-inset-left, 16px));
           align-items: flex-end;
         }
+        .lw-wrap {
+          width: 100%;
+        }
         .lw-card {
           width: 100%;
           padding: 24px 22px 22px;
@@ -1224,11 +1262,18 @@
           font-size: 11px;
           min-height: 44px;
         }
+        .lw-progress-bar {
+          margin: 18px -22px -22px;
+          width: calc(100% + 44px);
+        }
       }
       /* short / landscape phones — keep modal centered without bottom-sheet */
       @media (max-width: 720px) and (orientation: landscape) {
         .loader-warn {
           align-items: center;
+        }
+        .lw-wrap {
+          width: min(440px, 92vw);
         }
         .lw-card {
           width: min(440px, 92vw);
@@ -2744,26 +2789,32 @@
   <body class="h-default">
     <!-- LOADER WARNING -->
     <div id="loader-warn" class="loader-warn hidden">
-      <div class="lw-card">
-        <h3>開場動畫提醒</h3>
-        <p>
-          本次開場包含 <b>強烈閃爍光效</b>、<b>故障/抖動殘影</b> 與
-          <b>聲音</b>,可能對光敏感族群造成不適。
-        </p>
-        <p class="lw-tip">使用電腦觀看,顯示效果會更好喔</p>
-        <div class="lw-toggle on" id="lw-sound-row">
-          <span class="lbl">播放聲音</span>
-          <span class="lw-tog"></span>
+      <div class="lw-wrap">
+        <div class="lw-card">
+          <h3>開場動畫提醒</h3>
+          <p>
+            本次開場包含 <b>強烈閃爍光效</b>、<b>故障/抖動殘影</b> 與
+            <b>聲音</b>,可能對光敏感族群造成不適。
+          </p>
+          <p class="lw-tip">使用電腦觀看,顯示效果會更好喔</p>
+          <div class="lw-toggle on" id="lw-sound-row">
+            <span class="lbl">播放聲音</span>
+            <span class="lw-tog"></span>
+          </div>
+          <label class="lw-check">
+            <input type="checkbox" id="lw-remember" />
+            <span class="lw-box"></span>
+            以後不再詢問,直接套用此選擇
+          </label>
+          <div class="lw-actions">
+            <button type="button" id="lw-skip">跳過</button>
+            <button type="button" id="lw-play" class="primary">觀看</button>
+          </div>
+          <div class="lw-progress-bar hidden" id="lw-progress">
+            <i id="lw-progress-fill"></i>
+          </div>
         </div>
-        <label class="lw-check">
-          <input type="checkbox" id="lw-remember" />
-          <span class="lw-box"></span>
-          以後不再詢問,直接套用此選擇
-        </label>
-        <div class="lw-actions">
-          <button type="button" id="lw-skip">跳過</button>
-          <button type="button" id="lw-play" class="primary">觀看</button>
-        </div>
+        <div class="lw-progress-pct hidden" id="lw-progress-pct">0%</div>
       </div>
     </div>
 
@@ -3097,16 +3148,52 @@
    ------------------------------------------------------------ */
       const LUNAR = {
         lunar: {
-          lm: 1, ld: 1,
-          g: { 2026:[2,17], 2027:[2,6], 2028:[1,26], 2029:[2,13], 2030:[2,3], 2031:[1,23], 2032:[2,11], 2033:[1,31], 2034:[2,19], 2035:[2,8] },
+          lm: 1,
+          ld: 1,
+          g: {
+            2026: [2, 17],
+            2027: [2, 6],
+            2028: [1, 26],
+            2029: [2, 13],
+            2030: [2, 3],
+            2031: [1, 23],
+            2032: [2, 11],
+            2033: [1, 31],
+            2034: [2, 19],
+            2035: [2, 8],
+          },
         },
         dragonboat: {
-          lm: 5, ld: 5,
-          g: { 2026:[6,19], 2027:[6,9], 2028:[5,28], 2029:[6,16], 2030:[6,5], 2031:[6,24], 2032:[6,12], 2033:[6,1], 2034:[6,20], 2035:[6,10] },
+          lm: 5,
+          ld: 5,
+          g: {
+            2026: [6, 19],
+            2027: [6, 9],
+            2028: [5, 28],
+            2029: [6, 16],
+            2030: [6, 5],
+            2031: [6, 24],
+            2032: [6, 12],
+            2033: [6, 1],
+            2034: [6, 20],
+            2035: [6, 10],
+          },
         },
         midautumn: {
-          lm: 8, ld: 15,
-          g: { 2026:[9,25], 2027:[9,15], 2028:[10,3], 2029:[9,22], 2030:[9,12], 2031:[10,1], 2032:[9,19], 2033:[9,8], 2034:[9,27], 2035:[9,16] },
+          lm: 8,
+          ld: 15,
+          g: {
+            2026: [9, 25],
+            2027: [9, 15],
+            2028: [10, 3],
+            2029: [9, 22],
+            2030: [9, 12],
+            2031: [10, 1],
+            2032: [9, 19],
+            2033: [9, 8],
+            2034: [9, 27],
+            2035: [9, 16],
+          },
         },
       };
 
@@ -4372,23 +4459,127 @@
    LOADER VIDEO CONFIG — 調這裡就好
    ============================================================ */
       const LOADER_VIDEO_SRC =
-        "https://github.com/FCheatDev/alya-assets/releases/download/v1/loader-intro.mp4"; // hosted on alya-assets public release
+        "https://github.com/AutoEZyt/alya-web/releases/download/r/loader-intro.mp4"; // hosted on alya-assets public release
       const LOADER_START_SEC = 0;
       const LOADER_END_SEC = null;
       /* ============================================================ */
 
-      // Begin downloading the video early so by the time the user
-      // clicks 觀看, it's mostly buffered. Lets the synchronous play()
-      // inside the click handler succeed immediately with sound (no
-      // extra tap needed) and play smoothly without rebuffering.
-      function preloadLoaderVideo() {
-        const vid = document.getElementById("lvid");
-        if (vid.src) return;
-        vid.preload = "auto";
-        vid.src = LOADER_VIDEO_SRC;
+      /* ---- true persistent caching via the Cache Storage API ----
+         Cache Storage (unlike plain HTTP cache) is explicit and
+         persists across reloads/sessions until we evict it or the
+         browser clears site data. First visit: fetch the video with
+         streaming progress, store the full response in the cache,
+         then hand back a blob: URL. Every visit after that: read
+         straight from the cache, no network at all. */
+      const VIDEO_CACHE_NAME = "alya-loader-video-v1";
+      let loaderVideoBlobURL = null;
+      let loaderVideoPromise = null;
+
+      async function fetchAndCacheLoaderVideo(onProgress) {
+        const canUseCache = "caches" in window;
         try {
-          vid.load();
-        } catch (e) {}
+          if (canUseCache) {
+            const cache = await caches.open(VIDEO_CACHE_NAME);
+            const cached = await cache.match(LOADER_VIDEO_SRC);
+            if (cached) {
+              onProgress && onProgress(100, true);
+              const blob = await cached.blob();
+              return URL.createObjectURL(blob);
+            }
+          }
+        } catch (e) {
+          // Cache Storage unavailable/blocked — fall through to network.
+        }
+
+        const resp = await fetch(LOADER_VIDEO_SRC);
+        if (!resp.ok) throw new Error("video fetch failed: " + resp.status);
+        const total = parseInt(resp.headers.get("Content-Length") || "0", 10);
+
+        let blob;
+        if (resp.body && resp.body.getReader && total) {
+          const reader = resp.body.getReader();
+          const chunks = [];
+          let received = 0;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            received += value.length;
+            onProgress &&
+              onProgress(Math.min(99, (received / total) * 100), false);
+          }
+          blob = new Blob(chunks, {
+            type: resp.headers.get("Content-Type") || "video/mp4",
+          });
+        } else {
+          // Streaming not supported — fall back to a single await,
+          // no incremental progress available in this path.
+          blob = await resp.blob();
+        }
+
+        try {
+          if (canUseCache) {
+            const cache = await caches.open(VIDEO_CACHE_NAME);
+            await cache.put(
+              LOADER_VIDEO_SRC,
+              new Response(blob, {
+                headers: { "Content-Type": blob.type || "video/mp4" },
+              }),
+            );
+          }
+        } catch (e) {
+          // Storage full/unavailable — video still plays this session,
+          // just won't be cached for next time.
+        }
+
+        onProgress && onProgress(100, false);
+        return URL.createObjectURL(blob);
+      }
+
+      // Begin downloading (or reading from cache) early so by the
+      // time the user clicks 觀看, it's ready. onProgress(pct, fromCache)
+      // lets the warning card show a live progress bar.
+      function preloadLoaderVideo(onProgress) {
+        if (loaderVideoBlobURL) {
+          onProgress && onProgress(100, true);
+          const vid = document.getElementById("lvid");
+          if (vid && vid.src !== loaderVideoBlobURL)
+            vid.src = loaderVideoBlobURL;
+          return Promise.resolve(loaderVideoBlobURL);
+        }
+        if (!loaderVideoPromise) {
+          loaderVideoPromise = fetchAndCacheLoaderVideo(onProgress)
+            .then((url) => {
+              loaderVideoBlobURL = url;
+              const vid = document.getElementById("lvid");
+              if (vid) {
+                vid.src = url;
+                try {
+                  vid.load();
+                } catch (e) {}
+              }
+              return url;
+            })
+            .catch((err) => {
+              // Network/CORS failure — fall back to direct streaming
+              // src so playback still works, just without caching.
+              loaderVideoPromise = null;
+              const vid = document.getElementById("lvid");
+              if (vid && !vid.src) {
+                vid.preload = "auto";
+                vid.src = LOADER_VIDEO_SRC;
+                try {
+                  vid.load();
+                } catch (e) {}
+              }
+              throw err;
+            });
+        } else if (onProgress) {
+          // Someone already listening won't get this late subscriber's
+          // callback — but readiness is checked separately in
+          // showLoaderWarn via loaderVideoBlobURL/vid.readyState.
+        }
+        return loaderVideoPromise;
       }
 
       function runLoader(opts) {
@@ -4456,9 +4647,10 @@
         skip.addEventListener("click", finish, { signal: sig });
 
         // Make sure src is set (preload may not have run for replay
-        // path; idempotent if already set).
-        if (!vid.src || vid.src.indexOf(LOADER_VIDEO_SRC.split("?")[0]) < 0) {
-          vid.src = LOADER_VIDEO_SRC;
+        // path; idempotent if already set). Prefer the cached blob
+        // URL if we have it; otherwise fall back to direct streaming.
+        if (!vid.src) {
+          vid.src = loaderVideoBlobURL || LOADER_VIDEO_SRC;
           try {
             vid.load();
           } catch (e) {}
@@ -4556,55 +4748,89 @@
         const soundOn = !prefs || prefs.loaderSound !== false;
         lwSoundRow.classList.toggle("on", soundOn);
 
-        // Gate the 觀看 button until the video is fully buffered.
-        // This way the click → sync vid.play() chain hits a video that
-        // is ready to play through immediately — no first-frame stutter.
+        // Gate the 觀看 button until the video is fully downloaded
+        // (from cache, or freshly fetched+cached). This way the
+        // click → sync vid.play() chain hits a video that is ready
+        // to play through immediately — no first-frame stutter.
         const PLAY_LABEL = "▶ 觀看";
         const ctrl = new AbortController();
         let ready = false;
+        const progWrap = document.getElementById("lw-progress");
+        const progFill = document.getElementById("lw-progress-fill");
+        const progPct = document.getElementById("lw-progress-pct");
         function setReady() {
           if (ready) return;
           ready = true;
           playBtn.disabled = false;
           playBtn.textContent = PLAY_LABEL;
+          if (progFill) progFill.style.width = "100%";
+          if (progPct) progPct.textContent = "100%";
+          if (progWrap) progWrap.classList.add("hidden");
+          if (progPct) progPct.classList.add("hidden");
         }
-        function updateProgress() {
-          if (ready) return;
-          try {
-            if (vid.buffered && vid.buffered.length) {
-              const end = vid.buffered.end(vid.buffered.length - 1);
-              const dur = vid.duration || 0;
-              if (dur > 0) {
-                const pct = (end / dur) * 100;
-                if (pct >= 99) {
-                  setReady();
-                  return;
-                }
-                playBtn.textContent = `載入中 ${Math.min(99, Math.round(pct))}%`;
-              }
-            }
-          } catch (e) {}
-        }
-        if (vid.readyState >= 4) {
-          // already buffered (e.g. user is replaying or returned quickly)
+        if (loaderVideoBlobURL || vid.readyState >= 4) {
+          // already cached/buffered (e.g. replaying, or returned quickly)
           playBtn.disabled = false;
           playBtn.textContent = PLAY_LABEL;
           ready = true;
+          if (progWrap) progWrap.classList.add("hidden");
+          if (progPct) progPct.classList.add("hidden");
         } else {
           playBtn.disabled = true;
           playBtn.textContent = "載入中…";
-          vid.addEventListener("canplaythrough", setReady, {
-            signal: ctrl.signal,
-          });
-          vid.addEventListener("progress", updateProgress, {
-            signal: ctrl.signal,
-          });
-          // Fallback: if canplaythrough never fires, accept canplay
-          // after 8 seconds rather than block the user forever.
-          vid.addEventListener("canplay", () => setTimeout(setReady, 8000), {
-            signal: ctrl.signal,
-            once: true,
-          });
+          if (progWrap) progWrap.classList.remove("hidden");
+          if (progPct) progPct.classList.remove("hidden");
+          if (progFill) progFill.style.width = "0%";
+          if (progPct) progPct.textContent = "0%";
+          preloadLoaderVideo((pct, fromCache) => {
+            if (ctrl.signal.aborted || ready) return;
+            if (fromCache || pct >= 100) {
+              setReady();
+              return;
+            }
+            const shown = Math.min(99, Math.round(pct));
+            if (progFill) progFill.style.width = shown + "%";
+            if (progPct) progPct.textContent = shown + "%";
+          })
+            .then(() => {
+              if (!ctrl.signal.aborted) setReady();
+            })
+            .catch(() => {
+              // Caching failed (e.g. CORS) — fall back to normal
+              // buffered-progress tracking on the direct stream.
+              if (ctrl.signal.aborted) return;
+              function bufferedProgress() {
+                if (ready) return;
+                try {
+                  if (vid.buffered && vid.buffered.length) {
+                    const end = vid.buffered.end(vid.buffered.length - 1);
+                    const dur = vid.duration || 0;
+                    if (dur > 0) {
+                      const pct = (end / dur) * 100;
+                      if (pct >= 99) return setReady();
+                      const shown = Math.min(99, Math.round(pct));
+                      if (progFill) progFill.style.width = shown + "%";
+                      if (progPct) progPct.textContent = shown + "%";
+                    }
+                  }
+                } catch (e) {}
+              }
+              vid.addEventListener("canplaythrough", setReady, {
+                signal: ctrl.signal,
+              });
+              vid.addEventListener("progress", bufferedProgress, {
+                signal: ctrl.signal,
+              });
+              vid.addEventListener(
+                "canplay",
+                () => setTimeout(setReady, 8000),
+                { signal: ctrl.signal, once: true },
+              );
+            });
+          // Absolute fallback so the button never stays stuck forever.
+          setTimeout(() => {
+            if (!ready && !ctrl.signal.aborted) setReady();
+          }, 20000);
         }
 
         warn.classList.remove("hidden");
