@@ -4458,11 +4458,23 @@
       /* ============================================================
    LOADER VIDEO CONFIG — 調這裡就好
    ============================================================ */
-      const LOADER_VIDEO_SRC =
-        "https://github.com/AlyaYwu/alya-web/releases/download/1080/loader-intro1080.mp4"; // hosted on alya-assets public release
+      const LOADER_VIDEO_SRC = "loader-intro1080.mp4"; // 跟 index.html 同目錄,同源,不用CORS
       const LOADER_START_SEC = 0;
       const LOADER_END_SEC = null;
       /* ============================================================ */
+
+      /* ---- console-only debug log for the loader video ----
+         Every meaningful step (URL used, cache hit/miss, CORS
+         failures, byte progress milestones) gets logged to
+         console.log with a [LV] tag. Open devtools console to see it
+         — nothing is shown in the UI. */
+      const lvLog = [];
+      function logV(msg) {
+        const line = `[${new Date().toLocaleTimeString("zh-TW", { hour12: false })}] ${msg}`;
+        lvLog.push(line);
+        if (lvLog.length > 300) lvLog.shift();
+        console.log("[LV]", msg);
+      }
 
       /* ---- true persistent caching via the Cache Storage API ----
          Cache Storage (unlike plain HTTP cache) is explicit and
@@ -4470,7 +4482,23 @@
          browser clears site data. First visit: fetch the video with
          streaming progress, store the full response in the cache,
          then hand back a blob: URL. Every visit after that: read
-         straight from the cache, no network at all. */
+         straight from the cache, no network at all.
+
+         CAVEAT (see log output at runtime): GitHub Releases assets
+         redirect to a short-lived, presigned Azure Blob URL and send
+         `Cache-Control: no-cache` on the redirect itself, and the
+         final blob host does not return an Access-Control-Allow-Origin
+         header. That means fetch() from this page will usually be
+         blocked by CORS before a single byte arrives, so Cache
+         Storage never actually gets populated — the code below falls
+         back to plain <video src> streaming instead, which is NOT
+         reliably cached by the browser either (no stable Cache-Control
+         from a URL that changes every request). If you want real
+         persistent caching, the video needs to be re-hosted somewhere
+         that (a) sends Access-Control-Allow-Origin for this origin,
+         and (b) serves it from a stable, cacheable URL — e.g.
+         Cloudflare R2/Pages, a plain static host, or jsDelivr in front
+         of a GitHub *raw* (not Release-asset) file. */
       const VIDEO_CACHE_NAME = "alya-loader-video-v1";
       let loaderVideoBlobURL = null;
       let loaderVideoPromise = null;
@@ -4490,50 +4518,78 @@
 
       async function fetchAndCacheLoaderVideo() {
         const canUseCache = "caches" in window;
+        logV(`來源網址: ${LOADER_VIDEO_SRC}`);
         try {
           if (canUseCache) {
+            logV(`檢查 Cache Storage (${VIDEO_CACHE_NAME})…`);
             const cache = await caches.open(VIDEO_CACHE_NAME);
             const cached = await cache.match(LOADER_VIDEO_SRC);
             if (cached) {
+              logV("快取命中,直接讀取,不打網路");
               notifyLoaderVideoProgress(100, true);
               const blob = await cached.blob();
+              logV(`讀取完成,大小 ${(blob.size / 1048576).toFixed(1)}MB`);
               return URL.createObjectURL(blob);
             }
+            logV("快取未命中,開始下載");
+          } else {
+            logV("此瀏覽器不支援 Cache Storage,直接下載");
           }
         } catch (e) {
-          // Cache Storage unavailable/blocked — fall through to network.
+          logV(`讀取快取時發生錯誤: ${e.message},改走網路下載`);
         }
 
-        const resp = await fetch(LOADER_VIDEO_SRC);
-        if (!resp.ok) throw new Error("video fetch failed: " + resp.status);
+        logV(`開始 fetch: ${LOADER_VIDEO_SRC}`);
+        let resp;
+        try {
+          resp = await fetch(LOADER_VIDEO_SRC);
+        } catch (e) {
+          logV(
+            `fetch() 失敗(很可能是 CORS 被擋): ${e.message} — 改用 <video> 直接串流,不會被快取`,
+          );
+          throw e;
+        }
+        if (!resp.ok) {
+          logV(`fetch 回應非 200: HTTP ${resp.status}`);
+          throw new Error("video fetch failed: " + resp.status);
+        }
         const total = parseInt(resp.headers.get("Content-Length") || "0", 10);
+        logV(
+          `回應 OK,Content-Length=${total ? (total / 1048576).toFixed(1) + "MB" : "未知"}`,
+        );
 
         let blob;
         if (resp.body && resp.body.getReader && total) {
           const reader = resp.body.getReader();
           const chunks = [];
           let received = 0;
+          let lastLogPct = -10;
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
             chunks.push(value);
             received += value.length;
-            notifyLoaderVideoProgress(
-              Math.min(99, (received / total) * 100),
-              false,
-            );
+            const pct = Math.min(99, (received / total) * 100);
+            if (pct - lastLogPct >= 10) {
+              logV(
+                `下載中… ${Math.round(pct)}% (${(received / 1048576).toFixed(1)}MB / ${(total / 1048576).toFixed(1)}MB)`,
+              );
+              lastLogPct = pct;
+            }
+            notifyLoaderVideoProgress(pct, false);
           }
           blob = new Blob(chunks, {
             type: resp.headers.get("Content-Type") || "video/mp4",
           });
         } else {
-          // Streaming not supported — fall back to a single await,
-          // no incremental progress available in this path.
+          logV("伺服器不支援串流讀取,一次性下載整個檔案(無法顯示進度)");
           blob = await resp.blob();
         }
+        logV(`下載完成,共 ${(blob.size / 1048576).toFixed(1)}MB`);
 
         try {
           if (canUseCache) {
+            logV("寫入 Cache Storage…");
             const cache = await caches.open(VIDEO_CACHE_NAME);
             await cache.put(
               LOADER_VIDEO_SRC,
@@ -4541,10 +4597,10 @@
                 headers: { "Content-Type": blob.type || "video/mp4" },
               }),
             );
+            logV("已寫入快取,下次同一個瀏覽器造訪應該會直接命中");
           }
         } catch (e) {
-          // Storage full/unavailable — video still plays this session,
-          // just won't be cached for next time.
+          logV(`寫入快取失敗: ${e.message} — 這次仍可播放,只是下次不會走快取`);
         }
 
         notifyLoaderVideoProgress(100, false);
@@ -4591,6 +4647,7 @@
               loaderVideoPromise = null;
               const vid = document.getElementById("lvid");
               if (vid && !vid.src) {
+                logV(`退回直接串流模式: ${LOADER_VIDEO_SRC}`);
                 vid.preload = "auto";
                 vid.src = LOADER_VIDEO_SRC;
                 try {
@@ -4843,8 +4900,13 @@
               if (!ctrl.signal.aborted) finalizeReady();
             })
             .catch(() => {
-              // Caching failed (e.g. CORS) — fall back to normal
-              // buffered-progress tracking on the direct stream.
+              // Caching failed (e.g. CORS) — fall back to tracking the
+              // direct stream's own buffered range. Readiness is
+              // ALWAYS driven by "how much is actually buffered",
+              // never by canplaythrough alone — canplaythrough only
+              // means "enough to start smoothly given current network
+              // speed", which can fire at a tiny buffered % on a fast
+              // connection and doesn't mean the video is fully loaded.
               if (ctrl.signal.aborted) return;
               function bufferedProgress() {
                 if (ready) return;
@@ -4854,7 +4916,10 @@
                     const dur = vid.duration || 0;
                     if (dur > 0) {
                       const pct = (end / dur) * 100;
-                      if (pct >= 99) return finalizeReady();
+                      if (pct >= 99) {
+                        logV("直接串流已緩衝完成,解除按鈕鎖定");
+                        return finalizeReady();
+                      }
                       const shown = Math.min(99, Math.round(pct));
                       if (progFill) progFill.style.width = shown + "%";
                       if (progPct) progPct.textContent = shown + "%";
@@ -4862,21 +4927,32 @@
                   }
                 } catch (e) {}
               }
-              vid.addEventListener("canplaythrough", setReady, {
-                signal: ctrl.signal,
-              });
               vid.addEventListener("progress", bufferedProgress, {
                 signal: ctrl.signal,
               });
+              // Safety valve only — if buffered-range reporting is
+              // unreliable on this browser and we're stuck at "載入中"
+              // far too long, accept canplaythrough as good enough
+              // rather than block the user forever.
               vid.addEventListener(
-                "canplay",
-                () => setTimeout(setReady, 8000),
+                "canplaythrough",
+                () => {
+                  setTimeout(() => {
+                    if (!ready && !ctrl.signal.aborted) {
+                      logV("緩衝進度回報異常,改用canplaythrough保底解鎖");
+                      setReady();
+                    }
+                  }, 6000);
+                },
                 { signal: ctrl.signal, once: true },
               );
             });
           // Absolute fallback so the button never stays stuck forever.
           setTimeout(() => {
-            if (!ready && !ctrl.signal.aborted) setReady();
+            if (!ready && !ctrl.signal.aborted) {
+              logV("已達20秒保底逾時,強制解鎖播放按鈕");
+              setReady();
+            }
           }, 20000);
         }
 
