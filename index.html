@@ -4474,15 +4474,28 @@
       const VIDEO_CACHE_NAME = "alya-loader-video-v1";
       let loaderVideoBlobURL = null;
       let loaderVideoPromise = null;
+      let loaderVideoProgressListeners = [];
+      let loaderVideoLastPct = 0;
+      let loaderVideoLastFromCache = false;
 
-      async function fetchAndCacheLoaderVideo(onProgress) {
+      function notifyLoaderVideoProgress(pct, fromCache) {
+        loaderVideoLastPct = pct;
+        loaderVideoLastFromCache = fromCache;
+        loaderVideoProgressListeners.forEach((fn) => {
+          try {
+            fn(pct, fromCache);
+          } catch (e) {}
+        });
+      }
+
+      async function fetchAndCacheLoaderVideo() {
         const canUseCache = "caches" in window;
         try {
           if (canUseCache) {
             const cache = await caches.open(VIDEO_CACHE_NAME);
             const cached = await cache.match(LOADER_VIDEO_SRC);
             if (cached) {
-              onProgress && onProgress(100, true);
+              notifyLoaderVideoProgress(100, true);
               const blob = await cached.blob();
               return URL.createObjectURL(blob);
             }
@@ -4505,8 +4518,10 @@
             if (done) break;
             chunks.push(value);
             received += value.length;
-            onProgress &&
-              onProgress(Math.min(99, (received / total) * 100), false);
+            notifyLoaderVideoProgress(
+              Math.min(99, (received / total) * 100),
+              false,
+            );
           }
           blob = new Blob(chunks, {
             type: resp.headers.get("Content-Type") || "video/mp4",
@@ -4532,23 +4547,33 @@
           // just won't be cached for next time.
         }
 
-        onProgress && onProgress(100, false);
+        notifyLoaderVideoProgress(100, false);
         return URL.createObjectURL(blob);
       }
 
       // Begin downloading (or reading from cache) early so by the
       // time the user clicks 觀看, it's ready. onProgress(pct, fromCache)
-      // lets the warning card show a live progress bar.
+      // lets the warning card show a live progress bar — any number of
+      // callers can subscribe, even after the download already started,
+      // and they'll immediately get the latest known progress plus all
+      // future updates.
       function preloadLoaderVideo(onProgress) {
+        if (onProgress) {
+          loaderVideoProgressListeners.push(onProgress);
+          // Catch this subscriber up on progress that already happened
+          // before it registered.
+          if (loaderVideoBlobURL) onProgress(100, loaderVideoLastFromCache);
+          else if (loaderVideoLastPct > 0)
+            onProgress(loaderVideoLastPct, false);
+        }
         if (loaderVideoBlobURL) {
-          onProgress && onProgress(100, true);
           const vid = document.getElementById("lvid");
           if (vid && vid.src !== loaderVideoBlobURL)
             vid.src = loaderVideoBlobURL;
           return Promise.resolve(loaderVideoBlobURL);
         }
         if (!loaderVideoPromise) {
-          loaderVideoPromise = fetchAndCacheLoaderVideo(onProgress)
+          loaderVideoPromise = fetchAndCacheLoaderVideo()
             .then((url) => {
               loaderVideoBlobURL = url;
               const vid = document.getElementById("lvid");
@@ -4574,10 +4599,6 @@
               }
               throw err;
             });
-        } else if (onProgress) {
-          // Someone already listening won't get this late subscriber's
-          // callback — but readiness is checked separately in
-          // showLoaderWarn via loaderVideoBlobURL/vid.readyState.
         }
         return loaderVideoPromise;
       }
@@ -4768,13 +4789,37 @@
           if (progWrap) progWrap.classList.add("hidden");
           if (progPct) progPct.classList.add("hidden");
         }
+        // Bytes being downloaded isn't the same as the <video> element
+        // actually being able to play them smoothly — the browser still
+        // has to parse the container/demux/prime a few frames. Gate on
+        // the video's own readyState too, so 觀看 never unlocks into a
+        // stutter. Bounded wait so a slow decode doesn't block forever.
+        function finalizeReady() {
+          if (ready) return;
+          if (vid.readyState >= 3) {
+            setReady();
+            return;
+          }
+          vid.addEventListener(
+            "canplay",
+            () => {
+              if (!ctrl.signal.aborted) setReady();
+            },
+            { signal: ctrl.signal, once: true },
+          );
+          setTimeout(() => {
+            if (!ready && !ctrl.signal.aborted) setReady();
+          }, 4000);
+        }
         if (loaderVideoBlobURL || vid.readyState >= 4) {
           // already cached/buffered (e.g. replaying, or returned quickly)
-          playBtn.disabled = false;
-          playBtn.textContent = PLAY_LABEL;
-          ready = true;
+          if (loaderVideoBlobURL && vid.src !== loaderVideoBlobURL)
+            vid.src = loaderVideoBlobURL;
+          playBtn.disabled = true;
+          playBtn.textContent = "載入中…";
           if (progWrap) progWrap.classList.add("hidden");
           if (progPct) progPct.classList.add("hidden");
+          finalizeReady();
         } else {
           playBtn.disabled = true;
           playBtn.textContent = "載入中…";
@@ -4785,7 +4830,9 @@
           preloadLoaderVideo((pct, fromCache) => {
             if (ctrl.signal.aborted || ready) return;
             if (fromCache || pct >= 100) {
-              setReady();
+              if (progWrap) progWrap.classList.add("hidden");
+              if (progPct) progPct.classList.add("hidden");
+              finalizeReady();
               return;
             }
             const shown = Math.min(99, Math.round(pct));
@@ -4793,7 +4840,7 @@
             if (progPct) progPct.textContent = shown + "%";
           })
             .then(() => {
-              if (!ctrl.signal.aborted) setReady();
+              if (!ctrl.signal.aborted) finalizeReady();
             })
             .catch(() => {
               // Caching failed (e.g. CORS) — fall back to normal
@@ -4807,7 +4854,7 @@
                     const dur = vid.duration || 0;
                     if (dur > 0) {
                       const pct = (end / dur) * 100;
-                      if (pct >= 99) return setReady();
+                      if (pct >= 99) return finalizeReady();
                       const shown = Math.min(99, Math.round(pct));
                       if (progFill) progFill.style.width = shown + "%";
                       if (progPct) progPct.textContent = shown + "%";
